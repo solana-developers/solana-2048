@@ -1,0 +1,386 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using System.Threading.Tasks;
+using Solana.Unity;
+using Solana.Unity.Programs.Abstract;
+using Solana.Unity.Programs.Utilities;
+using Solana.Unity.Rpc;
+using Solana.Unity.Rpc.Builders;
+using Solana.Unity.Rpc.Core.Http;
+using Solana.Unity.Rpc.Core.Sockets;
+using Solana.Unity.Rpc.Types;
+using Solana.Unity.Wallet;
+using Solana2048;
+using Solana2048.Accounts;
+using Solana2048.Errors;
+using Solana2048.Program;
+using Solana2048.Types;
+
+namespace Solana2048
+{
+    namespace Accounts
+    {
+        public partial class PlayerData
+        {
+            public static ulong ACCOUNT_DISCRIMINATOR => 9264901878634267077UL;
+            public static ReadOnlySpan<byte> ACCOUNT_DISCRIMINATOR_BYTES => new byte[]{197, 65, 216, 202, 43, 139, 147, 128};
+            public static string ACCOUNT_DISCRIMINATOR_B58 => "ZzeEvyxXcpF";
+            public PublicKey Authority { get; set; }
+
+            public BoardData Board { get; set; }
+
+            public uint Score { get; set; }
+
+            public bool GameOver { get; set; }
+
+            public byte Direction { get; set; }
+
+            public uint TopTile { get; set; }
+
+            public byte NewTileX { get; set; }
+
+            public byte NewTileY { get; set; }
+
+            public uint NewTileLevel { get; set; }
+
+            public static PlayerData Deserialize(ReadOnlySpan<byte> _data)
+            {
+                int offset = 0;
+                ulong accountHashValue = _data.GetU64(offset);
+                offset += 8;
+                if (accountHashValue != ACCOUNT_DISCRIMINATOR)
+                {
+                    return null;
+                }
+
+                PlayerData result = new PlayerData();
+                result.Authority = _data.GetPubKey(offset);
+                offset += 32;
+                offset += BoardData.Deserialize(_data, offset, out var resultBoard);
+                result.Board = resultBoard;
+                result.Score = _data.GetU32(offset);
+                offset += 4;
+                result.GameOver = _data.GetBool(offset);
+                offset += 1;
+                result.Direction = _data.GetU8(offset);
+                offset += 1;
+                result.TopTile = _data.GetU32(offset);
+                offset += 4;
+                result.NewTileX = _data.GetU8(offset);
+                offset += 1;
+                result.NewTileY = _data.GetU8(offset);
+                offset += 1;
+                result.NewTileLevel = _data.GetU32(offset);
+                offset += 4;
+                return result;
+            }
+        }
+
+        public partial class Highscore
+        {
+            public static ulong ACCOUNT_DISCRIMINATOR => 11667186714381709185UL;
+            public static ReadOnlySpan<byte> ACCOUNT_DISCRIMINATOR_BYTES => new byte[]{129, 239, 224, 86, 128, 44, 234, 161};
+            public static string ACCOUNT_DISCRIMINATOR_B58 => "NjZ1MYFAXpU";
+            public HighscoreEntry[] Data { get; set; }
+
+            public static Highscore Deserialize(ReadOnlySpan<byte> _data)
+            {
+                int offset = 0;
+                ulong accountHashValue = _data.GetU64(offset);
+                offset += 8;
+                if (accountHashValue != ACCOUNT_DISCRIMINATOR)
+                {
+                    return null;
+                }
+
+                Highscore result = new Highscore();
+                int resultDataLength = (int)_data.GetU32(offset);
+                offset += 4;
+                result.Data = new HighscoreEntry[resultDataLength];
+                for (uint resultDataIdx = 0; resultDataIdx < resultDataLength; resultDataIdx++)
+                {
+                    offset += HighscoreEntry.Deserialize(_data, offset, out var resultDataresultDataIdx);
+                    result.Data[resultDataIdx] = resultDataresultDataIdx;
+                }
+
+                return result;
+            }
+        }
+    }
+
+    namespace Errors
+    {
+        public enum LumberjackErrorKind : uint
+        {
+            WrongAuthority = 6000U,
+            GameNotOverYet = 6001U
+        }
+    }
+
+    namespace Types
+    {
+        public partial class BoardData
+        {
+            public uint[][] Data { get; set; }
+
+            public int Serialize(byte[] _data, int initialOffset)
+            {
+                int offset = initialOffset;
+                foreach (var dataElement in Data)
+                {
+                    foreach (var dataElementElement in dataElement)
+                    {
+                        _data.WriteU32(dataElementElement, offset);
+                        offset += 4;
+                    }
+                }
+
+                return offset - initialOffset;
+            }
+
+            public static int Deserialize(ReadOnlySpan<byte> _data, int initialOffset, out BoardData result)
+            {
+                int offset = initialOffset;
+                result = new BoardData();
+                result.Data = new uint[4][];
+                for (uint resultDataIdx = 0; resultDataIdx < 4; resultDataIdx++)
+                {
+                    result.Data[resultDataIdx] = new uint[4];
+                    for (uint resultDataresultDataIdxIdx = 0; resultDataresultDataIdxIdx < 4; resultDataresultDataIdxIdx++)
+                    {
+                        result.Data[resultDataIdx][resultDataresultDataIdxIdx] = _data.GetU32(offset);
+                        offset += 4;
+                    }
+                }
+
+                return offset - initialOffset;
+            }
+        }
+
+        public partial class HighscoreEntry
+        {
+            public uint Score { get; set; }
+
+            public PublicKey Player { get; set; }
+
+            public PublicKey Nft { get; set; }
+
+            public int Serialize(byte[] _data, int initialOffset)
+            {
+                int offset = initialOffset;
+                _data.WriteU32(Score, offset);
+                offset += 4;
+                _data.WritePubKey(Player, offset);
+                offset += 32;
+                _data.WritePubKey(Nft, offset);
+                offset += 32;
+                return offset - initialOffset;
+            }
+
+            public static int Deserialize(ReadOnlySpan<byte> _data, int initialOffset, out HighscoreEntry result)
+            {
+                int offset = initialOffset;
+                result = new HighscoreEntry();
+                result.Score = _data.GetU32(offset);
+                offset += 4;
+                result.Player = _data.GetPubKey(offset);
+                offset += 32;
+                result.Nft = _data.GetPubKey(offset);
+                offset += 32;
+                return offset - initialOffset;
+            }
+        }
+    }
+
+    public partial class LumberjackClient : TransactionalBaseClient<LumberjackErrorKind>
+    {
+        public LumberjackClient(IRpcClient rpcClient, IStreamingRpcClient streamingRpcClient, PublicKey programId) : base(rpcClient, streamingRpcClient, programId)
+        {
+        }
+
+        public async Task<Solana.Unity.Programs.Models.ProgramAccountsResultWrapper<List<PlayerData>>> GetPlayerDatasAsync(string programAddress, Commitment commitment = Commitment.Finalized)
+        {
+            var list = new List<Solana.Unity.Rpc.Models.MemCmp>{new Solana.Unity.Rpc.Models.MemCmp{Bytes = PlayerData.ACCOUNT_DISCRIMINATOR_B58, Offset = 0}};
+            var res = await RpcClient.GetProgramAccountsAsync(programAddress, commitment, memCmpList: list);
+            if (!res.WasSuccessful || !(res.Result?.Count > 0))
+                return new Solana.Unity.Programs.Models.ProgramAccountsResultWrapper<List<PlayerData>>(res);
+            List<PlayerData> resultingAccounts = new List<PlayerData>(res.Result.Count);
+            resultingAccounts.AddRange(res.Result.Select(result => PlayerData.Deserialize(Convert.FromBase64String(result.Account.Data[0]))));
+            return new Solana.Unity.Programs.Models.ProgramAccountsResultWrapper<List<PlayerData>>(res, resultingAccounts);
+        }
+
+        public async Task<Solana.Unity.Programs.Models.ProgramAccountsResultWrapper<List<Highscore>>> GetHighscoresAsync(string programAddress, Commitment commitment = Commitment.Finalized)
+        {
+            var list = new List<Solana.Unity.Rpc.Models.MemCmp>{new Solana.Unity.Rpc.Models.MemCmp{Bytes = Highscore.ACCOUNT_DISCRIMINATOR_B58, Offset = 0}};
+            var res = await RpcClient.GetProgramAccountsAsync(programAddress, commitment, memCmpList: list);
+            if (!res.WasSuccessful || !(res.Result?.Count > 0))
+                return new Solana.Unity.Programs.Models.ProgramAccountsResultWrapper<List<Highscore>>(res);
+            List<Highscore> resultingAccounts = new List<Highscore>(res.Result.Count);
+            resultingAccounts.AddRange(res.Result.Select(result => Highscore.Deserialize(Convert.FromBase64String(result.Account.Data[0]))));
+            return new Solana.Unity.Programs.Models.ProgramAccountsResultWrapper<List<Highscore>>(res, resultingAccounts);
+        }
+
+        public async Task<Solana.Unity.Programs.Models.AccountResultWrapper<PlayerData>> GetPlayerDataAsync(string accountAddress, Commitment commitment = Commitment.Finalized)
+        {
+            var res = await RpcClient.GetAccountInfoAsync(accountAddress, commitment);
+            if (!res.WasSuccessful)
+                return new Solana.Unity.Programs.Models.AccountResultWrapper<PlayerData>(res);
+            var resultingAccount = PlayerData.Deserialize(Convert.FromBase64String(res.Result.Value.Data[0]));
+            return new Solana.Unity.Programs.Models.AccountResultWrapper<PlayerData>(res, resultingAccount);
+        }
+
+        public async Task<Solana.Unity.Programs.Models.AccountResultWrapper<Highscore>> GetHighscoreAsync(string accountAddress, Commitment commitment = Commitment.Finalized)
+        {
+            var res = await RpcClient.GetAccountInfoAsync(accountAddress, commitment);
+            if (!res.WasSuccessful)
+                return new Solana.Unity.Programs.Models.AccountResultWrapper<Highscore>(res);
+            var resultingAccount = Highscore.Deserialize(Convert.FromBase64String(res.Result.Value.Data[0]));
+            return new Solana.Unity.Programs.Models.AccountResultWrapper<Highscore>(res, resultingAccount);
+        }
+
+        public async Task<SubscriptionState> SubscribePlayerDataAsync(string accountAddress, Action<SubscriptionState, Solana.Unity.Rpc.Messages.ResponseValue<Solana.Unity.Rpc.Models.AccountInfo>, PlayerData> callback, Commitment commitment = Commitment.Finalized)
+        {
+            SubscriptionState res = await StreamingRpcClient.SubscribeAccountInfoAsync(accountAddress, (s, e) =>
+            {
+                PlayerData parsingResult = null;
+                if (e.Value?.Data?.Count > 0)
+                    parsingResult = PlayerData.Deserialize(Convert.FromBase64String(e.Value.Data[0]));
+                callback(s, e, parsingResult);
+            }, commitment);
+            return res;
+        }
+
+        public async Task<SubscriptionState> SubscribeHighscoreAsync(string accountAddress, Action<SubscriptionState, Solana.Unity.Rpc.Messages.ResponseValue<Solana.Unity.Rpc.Models.AccountInfo>, Highscore> callback, Commitment commitment = Commitment.Finalized)
+        {
+            SubscriptionState res = await StreamingRpcClient.SubscribeAccountInfoAsync(accountAddress, (s, e) =>
+            {
+                Highscore parsingResult = null;
+                if (e.Value?.Data?.Count > 0)
+                    parsingResult = Highscore.Deserialize(Convert.FromBase64String(e.Value.Data[0]));
+                callback(s, e, parsingResult);
+            }, commitment);
+            return res;
+        }
+
+        public async Task<RequestResult<string>> SendInitPlayerAsync(InitPlayerAccounts accounts, PublicKey feePayer, Func<byte[], PublicKey, byte[]> signingCallback, PublicKey programId)
+        {
+            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.LumberjackProgram.InitPlayer(accounts, programId);
+            return await SignAndSendTransaction(instr, feePayer, signingCallback);
+        }
+
+        public async Task<RequestResult<string>> SendPushInDirectionAsync(PushInDirectionAccounts accounts, byte direction, byte counter, PublicKey feePayer, Func<byte[], PublicKey, byte[]> signingCallback, PublicKey programId)
+        {
+            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.LumberjackProgram.PushInDirection(accounts, direction, counter, programId);
+            return await SignAndSendTransaction(instr, feePayer, signingCallback);
+        }
+
+        public async Task<RequestResult<string>> SendRestartAsync(RestartAccounts accounts, byte direction, byte counter, PublicKey feePayer, Func<byte[], PublicKey, byte[]> signingCallback, PublicKey programId)
+        {
+            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.LumberjackProgram.Restart(accounts, direction, counter, programId);
+            return await SignAndSendTransaction(instr, feePayer, signingCallback);
+        }
+
+        protected override Dictionary<uint, ProgramError<LumberjackErrorKind>> BuildErrorsDictionary()
+        {
+            return new Dictionary<uint, ProgramError<LumberjackErrorKind>>{{6000U, new ProgramError<LumberjackErrorKind>(LumberjackErrorKind.WrongAuthority, "Wrong Authority")}, {6001U, new ProgramError<LumberjackErrorKind>(LumberjackErrorKind.GameNotOverYet, "Game not over yet")}, };
+        }
+    }
+
+    namespace Program
+    {
+        public class InitPlayerAccounts
+        {
+            public PublicKey Player { get; set; }
+
+            public PublicKey Highscore { get; set; }
+
+            public PublicKey Signer { get; set; }
+
+            public PublicKey Avatar { get; set; }
+
+            public PublicKey SystemProgram { get; set; }
+        }
+
+        public class PushInDirectionAccounts
+        {
+            public PublicKey SessionToken { get; set; }
+
+            public PublicKey Player { get; set; }
+
+            public PublicKey Highscore { get; set; }
+
+            public PublicKey Signer { get; set; }
+
+            public PublicKey Avatar { get; set; }
+
+            public PublicKey SystemProgram { get; set; }
+        }
+
+        public class RestartAccounts
+        {
+            public PublicKey SessionToken { get; set; }
+
+            public PublicKey Player { get; set; }
+
+            public PublicKey Highscore { get; set; }
+
+            public PublicKey Signer { get; set; }
+
+            public PublicKey Avatar { get; set; }
+
+            public PublicKey SystemProgram { get; set; }
+        }
+
+        public static class LumberjackProgram
+        {
+            public static Solana.Unity.Rpc.Models.TransactionInstruction InitPlayer(InitPlayerAccounts accounts, PublicKey programId)
+            {
+                List<Solana.Unity.Rpc.Models.AccountMeta> keys = new()
+                {Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Player, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Signer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.Avatar, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false)};
+                byte[] _data = new byte[1200];
+                int offset = 0;
+                _data.WriteU64(4819994211046333298UL, offset);
+                offset += 8;
+                byte[] resultData = new byte[offset];
+                Array.Copy(_data, resultData, offset);
+                return new Solana.Unity.Rpc.Models.TransactionInstruction{Keys = keys, ProgramId = programId.KeyBytes, Data = resultData};
+            }
+
+            public static Solana.Unity.Rpc.Models.TransactionInstruction PushInDirection(PushInDirectionAccounts accounts, byte direction, byte counter, PublicKey programId)
+            {
+                List<Solana.Unity.Rpc.Models.AccountMeta> keys = new()
+                {Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SessionToken == null ? programId : accounts.SessionToken, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Player, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Signer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.Avatar, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false)};
+                byte[] _data = new byte[1200];
+                int offset = 0;
+                _data.WriteU64(5017331766430244341UL, offset);
+                offset += 8;
+                _data.WriteU8(direction, offset);
+                offset += 1;
+                _data.WriteU8(counter, offset);
+                offset += 1;
+                byte[] resultData = new byte[offset];
+                Array.Copy(_data, resultData, offset);
+                return new Solana.Unity.Rpc.Models.TransactionInstruction{Keys = keys, ProgramId = programId.KeyBytes, Data = resultData};
+            }
+
+            public static Solana.Unity.Rpc.Models.TransactionInstruction Restart(RestartAccounts accounts, byte direction, byte counter, PublicKey programId)
+            {
+                List<Solana.Unity.Rpc.Models.AccountMeta> keys = new()
+                {Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SessionToken == null ? programId : accounts.SessionToken, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Player, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Signer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.Avatar, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false)};
+                byte[] _data = new byte[1200];
+                int offset = 0;
+                _data.WriteU64(2919679679907439389UL, offset);
+                offset += 8;
+                _data.WriteU8(direction, offset);
+                offset += 1;
+                _data.WriteU8(counter, offset);
+                offset += 1;
+                byte[] resultData = new byte[offset];
+                Array.Copy(_data, resultData, offset);
+                return new Solana.Unity.Rpc.Models.TransactionInstruction{Keys = keys, ProgramId = programId.KeyBytes, Data = resultData};
+            }
+        }
+    }
+}
