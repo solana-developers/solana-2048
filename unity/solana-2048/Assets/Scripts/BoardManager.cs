@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using DefaultNamespace;
 using Frictionless;
-using Solana2048.Accounts;
+using Lumberjack.Accounts;
 using UnityEngine;
 
 public class BoardManager : MonoBehaviour
@@ -21,7 +21,8 @@ public class BoardManager : MonoBehaviour
     public DateTime? SocketMessageTimeout = null;
     public MeshRenderer BackgroundMeshRenderer;
     public TouchInputHandler TouchInputHandler;
-    
+    public DirectionIndicator DirectionIndicator;
+
     private Vector2Int? cachedInput = null;
     private bool isInitialized;
 
@@ -121,6 +122,8 @@ public class BoardManager : MonoBehaviour
         
         IsWaiting = false;
         SocketMessageTimeout = null;
+        DirectionIndicator.SetDirection(null);
+
         GameOverText.gameObject.SetActive(playerData.GameOver);
         if (playerData.GameOver)
         {
@@ -165,6 +168,18 @@ public class BoardManager : MonoBehaviour
             await Solana2048Service.Instance.SubscribeToPlayerDataUpdates();
             return;
         }
+        
+
+        if (Solana2048Service.Instance.CurrentPlayerData == null || Solana2048Service.Instance.CurrentPlayerData.GameOver)
+        {
+            cachedInput = null;
+            return;
+        }
+        
+        if (Solana2048Service.Instance == null || IsWaiting)
+        {
+            return;
+        }
         if (Input.GetKeyUp(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.D))
         {
             cachedInput = Vector2Int.right;
@@ -181,36 +196,29 @@ public class BoardManager : MonoBehaviour
         {
             cachedInput = Vector2Int.up;
         }
-        if (Solana2048Service.Instance.CurrentPlayerData == null || Solana2048Service.Instance.CurrentPlayerData.GameOver)
-        {
-            cachedInput = null;
-            return;
-        }
-        
-        if (Solana2048Service.Instance == null || IsWaiting)
-        {
-            return;
-        }
-
         if (cachedInput == Vector2Int.right)
         {
             Move(Vector2Int.right, WIDTH - 2, -1, 0, 1);
             Solana2048Service.Instance.PushInDirection(true, 0);
+            DirectionIndicator.SetDirection(Vector2Int.right);
         }
         if (cachedInput == Vector2Int.down)
         {
             Move(Vector2Int.down, 0, 1, HEIGHT - 2, -1);
             Solana2048Service.Instance.PushInDirection(true, 1);
+            DirectionIndicator.SetDirection(Vector2Int.down);
         }
         if (cachedInput == Vector2Int.left)
         {
             Move(Vector2Int.left, 1, 1, 0, 1);
             Solana2048Service.Instance.PushInDirection(true, 2);
+            DirectionIndicator.SetDirection(Vector2Int.left);
         }
         if (cachedInput == Vector2Int.up)
         {
             Move(Vector2Int.up, 0, 1, 1, 1);
             Solana2048Service.Instance.PushInDirection(true, 3);
+            DirectionIndicator.SetDirection(Vector2Int.up);
         }
 
         cachedInput = null;

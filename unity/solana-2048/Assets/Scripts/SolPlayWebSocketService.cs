@@ -1,15 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Net;
 using System.Numerics;
-using System.Threading.Tasks;
 using Frictionless;
 using UnityEngine;
 using NativeWebSocket;
 using Newtonsoft.Json;
 using Solana.Unity.Wallet;
-using WebSocket = NativeWebSocket.WebSocket;
 using WebSocketState = NativeWebSocket.WebSocketState;
 
 namespace SolPlay.Scripts.Services
@@ -25,6 +22,7 @@ namespace SolPlay.Scripts.Services
         private int reconnectTries;
         private int subcriptionCounter;
         public string socketUrl;
+        public WebSocketState WebSocketState;
 
         private class SocketSubscription
         {
@@ -107,7 +105,7 @@ namespace SolPlay.Scripts.Services
 
             return websocket.State;
         }
-
+        
         private void SetSocketUrl(string rpcUrl)
         {
             socketUrl = rpcUrl.Replace("https://", "wss://");
@@ -145,7 +143,7 @@ namespace SolPlay.Scripts.Services
             websocket.OnClose += OnWebSocketClosed;
             websocket.OnMessage += websocketOnOnMessage();
             websocket.Connect();
-            
+
             Debug.Log("Socket connect done");
         }
 
@@ -257,6 +255,10 @@ namespace SolPlay.Scripts.Services
                 websocket.DispatchMessageQueue();
             }
 #endif
+            if (websocket != null)
+            {
+                WebSocketState = websocket.State;
+            }
         }
 
         public async void SubscribeToBlocks()

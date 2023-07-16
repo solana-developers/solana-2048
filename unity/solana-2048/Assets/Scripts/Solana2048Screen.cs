@@ -1,6 +1,6 @@
 using System.Collections;
 using Frictionless;
-using Solana2048.Accounts;
+using Lumberjack.Accounts;
 using Solana.Unity.SDK;
 using Solana.Unity.Wallet.Bip39;
 using SolPlay.Scripts.Services;

@@ -82,7 +82,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentSolPlayNft: {}
   Icon: {fileID: 3491923924835660234}
-  Headline: {fileID: 5211176643515802174}
+  Headline: {fileID: 864439426238743110}
   Description: {fileID: 4061276270566714957}
   ErrorText: {fileID: 4910697138982138815}
   Button: {fileID: 6784602888350745414}
@@ -691,6 +691,7 @@ MonoBehaviour:
   NftItemView: {fileID: 114796427542782252}
   HighscoreText: {fileID: 1914902751512061521}
   WalletAddress: {fileID: 864439426238743110}
+  NftName: {fileID: 0}
   FallbackImage: {fileID: 1908410075464467382}
 --- !u!114 &4409643818330349602
 MonoBehaviour:
@@ -1619,7 +1620,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 21.3
+  m_fontSize: 18
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1965,7 +1966,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 40
+  m_fontSize: 18
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

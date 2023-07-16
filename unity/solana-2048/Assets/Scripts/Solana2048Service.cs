@@ -4,9 +4,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Frictionless;
-using Solana2048;
-using Solana2048.Accounts;
-using Solana2048.Program;
+using Lumberjack;
+using Lumberjack.Accounts;
+using Lumberjack.Program;
 using Solana.Unity.Programs;
 using Solana.Unity.Programs.Models;
 using Solana.Unity.Rpc.Core.Http;
@@ -130,7 +130,7 @@ using UnityEngine;
             Debug.Log("Player data pda: " + PlayerDataPDA);
 
             PublicKey.TryFindProgramAddress(new[]
-                    {Encoding.UTF8.GetBytes("highscore_list")},
+                    {Encoding.UTF8.GetBytes("highscore_list_v2")},
                 Solana_2048_ProgramIdPubKey, out HighscorePDA, out byte bump2);
 
             ServiceFactory.Resolve<SolPlayWebSocketService>().Connect("wss://devnet.helius-rpc.com/?api-key=dcee9dad-fb42-4a26-b394-41b53e81d913");
@@ -354,7 +354,11 @@ using UnityEngine;
                     walletToUse = sessionWallet;
                 }
                 
-                SendAndConfirmTransaction(walletToUse, tx, "Push in direction: " + direction);
+                SendAndConfirmTransaction(walletToUse, tx, "Push in direction: " + direction, () => {}, data =>
+                {
+                    OnGameReset?.Invoke();
+                    SubscribeToPlayerDataUpdates();
+                });
             }
         }
 
@@ -383,7 +387,7 @@ using UnityEngine;
                         }
                     }
                     await UniTask.Delay(100);
-                    if (counter >= 30)
+                    if (counter >= 60)
                     {
                         failed = true;
                         done = true;
@@ -419,10 +423,6 @@ using UnityEngine;
                 {
                     CurrentHighscoreData = highscoreData.ParsedResult;
                     OnHighscoreChanged?.Invoke(highscoreData.ParsedResult);
-                    foreach (var entry in CurrentHighscoreData.Data)
-                    {
-                        Debug.Log($"Highscore: {entry.Player} Score: {entry.Score}");
-                    }
                 }
             }
             catch (Exception e)

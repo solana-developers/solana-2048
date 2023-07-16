@@ -1,6 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
-using Solana2048.Types;
+using Lumberjack.Types;
 using Solana.Unity.SDK;
 using Solana.Unity.SDK.Nft;
 using TMPro;
@@ -14,6 +14,7 @@ namespace SolPlay.Scripts.Ui
         public NftItemView NftItemView;
         public TextMeshProUGUI HighscoreText;
         public TextMeshProUGUI WalletAddress;
+        public TextMeshProUGUI NftName;
         public Image FallbackImage;
 
         public async void SetData(HighscoreEntry highscoreEntry)

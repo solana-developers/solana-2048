@@ -12,13 +12,13 @@ using Solana.Unity.Rpc.Core.Http;
 using Solana.Unity.Rpc.Core.Sockets;
 using Solana.Unity.Rpc.Types;
 using Solana.Unity.Wallet;
-using Solana2048;
-using Solana2048.Accounts;
-using Solana2048.Errors;
-using Solana2048.Program;
-using Solana2048.Types;
+using Lumberjack;
+using Lumberjack.Program;
+using Lumberjack.Errors;
+using Lumberjack.Accounts;
+using Lumberjack.Types;
 
-namespace Solana2048
+namespace Lumberjack
 {
     namespace Accounts
     {
@@ -83,7 +83,9 @@ namespace Solana2048
             public static ulong ACCOUNT_DISCRIMINATOR => 11667186714381709185UL;
             public static ReadOnlySpan<byte> ACCOUNT_DISCRIMINATOR_BYTES => new byte[]{129, 239, 224, 86, 128, 44, 234, 161};
             public static string ACCOUNT_DISCRIMINATOR_B58 => "NjZ1MYFAXpU";
-            public HighscoreEntry[] Data { get; set; }
+            public HighscoreEntry[] Global { get; set; }
+
+            public HighscoreEntry[] Weekly { get; set; }
 
             public static Highscore Deserialize(ReadOnlySpan<byte> _data)
             {
@@ -96,13 +98,22 @@ namespace Solana2048
                 }
 
                 Highscore result = new Highscore();
-                int resultDataLength = (int)_data.GetU32(offset);
+                int resultGlobalLength = (int)_data.GetU32(offset);
                 offset += 4;
-                result.Data = new HighscoreEntry[resultDataLength];
-                for (uint resultDataIdx = 0; resultDataIdx < resultDataLength; resultDataIdx++)
+                result.Global = new HighscoreEntry[resultGlobalLength];
+                for (uint resultGlobalIdx = 0; resultGlobalIdx < resultGlobalLength; resultGlobalIdx++)
                 {
-                    offset += HighscoreEntry.Deserialize(_data, offset, out var resultDataresultDataIdx);
-                    result.Data[resultDataIdx] = resultDataresultDataIdx;
+                    offset += HighscoreEntry.Deserialize(_data, offset, out var resultGlobalresultGlobalIdx);
+                    result.Global[resultGlobalIdx] = resultGlobalresultGlobalIdx;
+                }
+
+                int resultWeeklyLength = (int)_data.GetU32(offset);
+                offset += 4;
+                result.Weekly = new HighscoreEntry[resultWeeklyLength];
+                for (uint resultWeeklyIdx = 0; resultWeeklyIdx < resultWeeklyLength; resultWeeklyIdx++)
+                {
+                    offset += HighscoreEntry.Deserialize(_data, offset, out var resultWeeklyresultWeeklyIdx);
+                    result.Weekly[resultWeeklyIdx] = resultWeeklyresultWeeklyIdx;
                 }
 
                 return result;

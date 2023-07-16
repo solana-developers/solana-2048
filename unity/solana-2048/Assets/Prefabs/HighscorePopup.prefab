@@ -88,6 +88,7 @@ GameObject:
   - component: {fileID: 4662410961040336985}
   - component: {fileID: 5533380482534528118}
   - component: {fileID: 3694243070986004344}
+  - component: {fileID: 9071503517534754639}
   m_Layer: 5
   m_Name: WeeklyHighscorePanel
   m_TagString: Untagged
@@ -110,7 +111,7 @@ RectTransform:
   - {fileID: 8861717097396616028}
   - {fileID: 4343005533679463688}
   - {fileID: 2905249316000825773}
-  m_Father: {fileID: 2239180373963910404}
+  m_Father: {fileID: 2239180374027997323}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -168,6 +169,50 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &9071503517534754639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1358330294448501207}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 5533380482534528118}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &2239180373035578742
 GameObject:
   m_ObjectHideFlags: 0
@@ -521,7 +566,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.00034461034}
+  m_AnchoredPosition: {x: 0, y: 0.000030517578}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &2239180373696905089
@@ -597,7 +642,7 @@ RectTransform:
   m_Children:
   - {fileID: 2239180373035578743}
   m_Father: {fileID: 2239180373963910404}
-  m_RootOrder: 3
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -685,7 +730,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2239180373302210352}
   m_HandleRect: {fileID: 2239180373302210383}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -819,6 +864,12 @@ MonoBehaviour:
   LoadingSpinner: {fileID: 4392749604199914756}
   HighscoreListEntryRoot: {fileID: 2239180373696905118}
   HighscoreListEntry: {fileID: 1076835320491813910, guid: ab1dcc6f632d54e5797ede05722b81cb, type: 3}
+  WeeklyButton: {fileID: 9071503517534754639}
+  GlobalButton: {fileID: 4741712999628752242}
+  WeeklyButtonCanvasGroup: {fileID: 3694243070986004344}
+  GlobalButtonCanvasGroup: {fileID: 858751891452782392}
+  GlobalArrow: {fileID: 5594260825635893346}
+  WeeklyArrow: {fileID: 6664326356577943095}
 --- !u!1 &2239180373963910403
 GameObject:
   m_ObjectHideFlags: 0
@@ -851,12 +902,10 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 772913261277388755}
-  - {fileID: 3072970960172366947}
   - {fileID: 2239180374069575834}
   - {fileID: 2239180373873687304}
   m_Father: {fileID: 2239180374027997323}
-  m_RootOrder: 0
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -977,6 +1026,8 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 772913261277388755}
+  - {fileID: 3072970960172366947}
   - {fileID: 2239180373963910404}
   m_Father: {fileID: 2239180374372278750}
   m_RootOrder: 1
@@ -1057,7 +1108,7 @@ RectTransform:
   m_Children:
   - {fileID: 2239180373696905119}
   m_Father: {fileID: 2239180373963910404}
-  m_RootOrder: 2
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -1935,7 +1986,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &4229733138168810467
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2006,6 +2057,7 @@ GameObject:
   - component: {fileID: 9200816266356598371}
   - component: {fileID: 7989537768616131294}
   - component: {fileID: 858751891452782392}
+  - component: {fileID: 4741712999628752242}
   m_Layer: 5
   m_Name: GlobalHighscorePanel
   m_TagString: Untagged
@@ -2028,7 +2080,7 @@ RectTransform:
   - {fileID: 6220744808575050125}
   - {fileID: 4353319249528798483}
   - {fileID: 4229733138168810467}
-  m_Father: {fileID: 2239180373963910404}
+  m_Father: {fileID: 2239180374027997323}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -2086,6 +2138,50 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &4741712999628752242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5626402333272627514}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 7989537768616131294}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &6664326356577943095
 GameObject:
   m_ObjectHideFlags: 0

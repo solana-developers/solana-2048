@@ -1,4 +1,5 @@
 using Frictionless;
+using Solana.Unity.SDK;
 using SolPlay.Scripts.Services;
 using SolPlay.Scripts.Ui;
 using UnityEngine;
@@ -29,7 +30,10 @@ public class SelectedNft : MonoBehaviour
         if (nftService != null && nftService.SelectedNft != null)
         {
             NftItemView.gameObject.SetActive(true);
-            NftItemView.SetData(nftService.SelectedNft, view => { Debug.Log("Selected Nft clicked."); });
+            NftItemView.SetData(nftService.SelectedNft, view =>
+            {
+                ServiceFactory.Resolve<UiService>().OpenPopup(UiService.ScreenType.NftListPopup, new NftListPopupUiData(false, Web3.Wallet));
+            });
         }
         else
         {
