@@ -690,8 +690,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   NftItemView: {fileID: 114796427542782252}
   HighscoreText: {fileID: 1914902751512061521}
-  WalletAddress: {fileID: 864439426238743110}
-  NftName: {fileID: 0}
+  WalletAddress: {fileID: 7067175154011352682}
+  NftName: {fileID: 864439426238743110}
   FallbackImage: {fileID: 1908410075464467382}
 --- !u!114 &4409643818330349602
 MonoBehaviour:

@@ -1,8 +1,10 @@
 using System;
 using Cysharp.Threading.Tasks;
+using Frictionless;
 using Lumberjack.Types;
 using Solana.Unity.SDK;
 using Solana.Unity.SDK.Nft;
+using SolPlay.Scripts.Services;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -32,9 +34,15 @@ namespace SolPlay.Scripts.Ui
             {
                 Debug.LogError("Could not load nft" + e);
             }
-            
+
+            if (nft == null)
+            {
+                nft = ServiceFactory.Resolve<NftService>().CreateDummyLocalNft(highscoreEntry.Nft);
+            }
             NftItemView.gameObject.SetActive(nft != null);
             FallbackImage.gameObject.SetActive(nft == null);
+
+            NftName.text = nft.metaplexData.data.metadata.name;
 
             if (nft != null)
             {

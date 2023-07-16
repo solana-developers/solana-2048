@@ -74,8 +74,8 @@ namespace SolPlay.Scripts.Ui
         {
             GlobalButtonCanvasGroup.alpha = weekly ? 0.5f:  1;
             WeeklyButtonCanvasGroup.alpha = !weekly ? 0.5f:  1f;
-            GlobalArrow.gameObject.SetActive(weekly);
-            WeeklyArrow.gameObject.SetActive(!weekly);
+            GlobalArrow.gameObject.SetActive(!weekly);
+            WeeklyArrow.gameObject.SetActive(weekly);
             
             foreach (Transform trans in HighscoreListEntryRoot.transform)
             {

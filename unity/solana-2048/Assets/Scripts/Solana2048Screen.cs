@@ -14,6 +14,7 @@ public class Solana2048Screen : MonoBehaviour
     public Button LoginButton;
     public Button LoginWalletAdapterButton;
     public Button ResetButton;
+    public Button TestButton;
     
     public Button RevokeSessionButton;
     public Button NftsButton;
@@ -41,11 +42,17 @@ public class Solana2048Screen : MonoBehaviour
         HighscoreButton.onClick.AddListener(OnHighscoreButtonClicked);
         ResetButton.onClick.AddListener(OnResetButtonClicked);
         InitGameDataButton.onClick.AddListener(OnInitGameDataButtonClicked);
+        TestButton.onClick.AddListener(OnTestClicked);
         Solana2048Service.OnPlayerDataChanged += OnPlayerDataChanged;
 
         StartCoroutine(UpdateNextEnergy());
         
         Solana2048Service.OnInitialDataLoaded += UpdateContent;
+    }
+
+    private void OnTestClicked()
+    {
+        ServiceFactory.Resolve<BoardManager>().SpawnTestTiles();
     }
 
     private void Update()

@@ -9,6 +9,7 @@ using Solana.Unity.SDK;
 using Solana.Unity.SDK.Nft;
 using Solana.Unity.Wallet;
 using UnityEngine;
+using Creator = Solana.Unity.Metaplex.NFT.Library.Creator;
 
 namespace SolPlay.Scripts.Services
 {
@@ -95,6 +96,9 @@ namespace SolPlay.Scripts.Services
             metaPlexData.offchainData.name = "Dummy Nft";
             metaPlexData.offchainData.description = "A dummy nft which uses the wallet puy key";
             metaPlexData.mint = publicKey;
+            metaPlexData.metadata = new OnChainData("Dummy NFT", 
+                "dumm", "test", 0, new List<Creator>(), 0, 0, null,
+                null, null, true);
 
             dummyLocalNft.metaplexData = new Metaplex(metaPlexData);
             dummyLocalNft.metaplexData.nftImage = new NftImage()

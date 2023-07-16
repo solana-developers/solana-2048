@@ -22,7 +22,8 @@ public class BoardManager : MonoBehaviour
     public MeshRenderer BackgroundMeshRenderer;
     public TouchInputHandler TouchInputHandler;
     public DirectionIndicator DirectionIndicator;
-
+    public TextAsset Asset;
+    
     private Vector2Int? cachedInput = null;
     private bool isInitialized;
 
@@ -341,7 +342,7 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    private void SpawnNewTile(int i, int j, uint number)
+    private void SpawnNewTile(int i, int j, uint number, Color? overrideColor = null)
     {
         if (number == 0)
         {
@@ -351,7 +352,10 @@ public class BoardManager : MonoBehaviour
         var targetCell = AllCells[i, j];
         tileInstance.transform.position = targetCell.transform.position;
         TileConfig newConfig = FindTileConfigByNumber(number);
-
+        if (overrideColor != null)
+        {
+            newConfig.MaterialColor = overrideColor.Value;
+        }
         if (targetCell.Tile != null)
         {
             Debug.LogError("Target cell already full: " + targetCell.Tile.currentConfig.Number);
@@ -359,6 +363,34 @@ public class BoardManager : MonoBehaviour
         tileInstance.Init(newConfig);
         tileInstance.Spawn(targetCell);
         tiles.Add(tileInstance);
+    }
+
+    public void SpawnTestTiles()
+    {
+        isInitialized = false;
+        foreach (Tile tile in tiles) {
+            Destroy(tile.gameObject);
+        }
+        tiles.Clear();
+        
+        for (int i = 0; i < WIDTH; i++)
+        {
+            for (int j = 0; j < HEIGHT; j++)
+            {
+                AllCells[i, j].Tile = null;
+            }
+        }
+
+        int count = 0;
+        uint number = 2;
+        foreach (var test in Asset.text.Split(" "))
+        {
+            ColorUtility.TryParseHtmlString(test, out Color colors);
+            Debug.Log("Color: " + test);
+            SpawnNewTile(count / 4, count % 4, number, colors);
+            count++;
+            number = number * 2;
+        }
     }
 
     private TileConfig FindTileConfigByNumber(uint number)

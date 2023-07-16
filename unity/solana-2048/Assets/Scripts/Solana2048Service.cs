@@ -133,7 +133,7 @@ using UnityEngine;
                     {Encoding.UTF8.GetBytes("highscore_list_v2")},
                 Solana_2048_ProgramIdPubKey, out HighscorePDA, out byte bump2);
 
-            ServiceFactory.Resolve<SolPlayWebSocketService>().Connect("wss://devnet.helius-rpc.com/?api-key=dcee9dad-fb42-4a26-b394-41b53e81d913");
+            ServiceFactory.Resolve<SolPlayWebSocketService>().Connect("wss://broken-empty-reel.solana-devnet.quiknode.pro/333a00f389fe630f4d331dd740b3aa6b040f8598/");
 
             solana_2048_client = new LumberjackClient(Web3.Rpc, Web3.WsRpc, Solana_2048_ProgramIdPubKey);
             
@@ -408,6 +408,8 @@ using UnityEngine;
             }
             else
             {
+                Debug.LogError("Transaction failed: " + res.RawRpcResponse);
+
                 onError?.Invoke(res.ErrorData);
             }
             Debug.Log($"Send tranaction {label} with response: {res.RawRpcResponse}");
