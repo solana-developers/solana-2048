@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 807115642482908152}
   - component: {fileID: 807115642482908151}
+  - component: {fileID: 1911136921}
   m_Layer: 0
   m_Name: BoardManager
   m_TagString: Untagged
@@ -68,6 +69,19 @@ MonoBehaviour:
   GameOverText: {fileID: 0}
   IsWaiting: 0
   BackgroundMeshRenderer: {fileID: 807115644214668570}
+  TouchInputHandler: {fileID: 1911136921}
+--- !u!114 &1911136921
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 807115642482908150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdfb6935797f24c30881d8aad9a6bbec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &807115644214668568
 GameObject:
   m_ObjectHideFlags: 0

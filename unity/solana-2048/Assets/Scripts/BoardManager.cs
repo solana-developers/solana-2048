@@ -20,6 +20,7 @@ public class BoardManager : MonoBehaviour
     public bool IsWaiting;
     public DateTime? SocketMessageTimeout = null;
     public MeshRenderer BackgroundMeshRenderer;
+    public TouchInputHandler TouchInputHandler;
     
     private Vector2Int? cachedInput = null;
     private bool isInitialized;
@@ -155,12 +156,13 @@ public class BoardManager : MonoBehaviour
 
     private async void Update()
     {
+        TouchInputHandler.OnUpdate();
         if (SocketMessageTimeout != null && SocketMessageTimeout + TimeSpan.FromSeconds(5) < DateTime.Now)
         {
             RefreshFromPlayerdata(Solana2048Service.Instance.CurrentPlayerData);
             cachedInput = null;
             SocketMessageTimeout = null;
-            await ServiceFactory.Resolve<Solana2048Service>().SubscribeToPlayerDataUpdates();
+            await Solana2048Service.Instance.SubscribeToPlayerDataUpdates();
             return;
         }
         if (Input.GetKeyUp(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.D))

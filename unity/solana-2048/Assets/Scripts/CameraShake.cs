@@ -19,6 +19,7 @@ namespace SolPlay.FlappyGame.Runtime.Scripts
 
         private Camera Camera;
         private Vector3 StartPosition;
+        private Vector3 StartScaledPosition;
         
         void Awake()
         {
@@ -26,6 +27,7 @@ namespace SolPlay.FlappyGame.Runtime.Scripts
             instance._originalPos = instance.gameObject.transform.localPosition;
             Camera = GetComponentInChildren<Camera>();
             StartPosition = Camera.gameObject.transform.position;
+            StartScaledPosition = Camera.gameObject.transform.position + new Vector3(0, CamerPositionForPortrait, 0);
         }
 
         void Update()
@@ -37,11 +39,15 @@ namespace SolPlay.FlappyGame.Runtime.Scripts
 
             if (Screen.width < Screen.height)
             {
-                Camera.gameObject.transform.position = StartPosition + new Vector3(0, CamerPositionForPortrait, 0);
+                Camera.gameObject.transform.position = StartScaledPosition;
+                instance._originalPos = instance.gameObject.transform.localPosition;
+
             }
             else
             {
                 Camera.gameObject.transform.position = StartPosition;
+                instance._originalPos = instance.gameObject.transform.localPosition;
+
             }
             //Camera.orthographicSize = CameraSize / Screen.width * Screen.height;
             //var orthographicSize = ((CameraSize / 1000) * Screen.width);        
@@ -59,14 +65,14 @@ namespace SolPlay.FlappyGame.Runtime.Scripts
             float endTime = Time.time + duration;
 
             while (duration > 0) {
-                transform.localPosition = _originalPos + Random.insideUnitSphere * amount;
+                transform.localPosition = instance._originalPos + Random.insideUnitSphere * amount;
 
                 duration -= _fakeDelta;
 
                 yield return null;
             }
 
-            transform.localPosition = _originalPos;
+            transform.localPosition = instance._originalPos;
         }
     }
 }

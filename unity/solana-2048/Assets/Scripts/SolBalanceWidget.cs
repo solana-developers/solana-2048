@@ -48,7 +48,7 @@ namespace SolPlay.Scripts.Ui
         
         private void UpdateContent()
         {
-            SolBalance.text = currentLamports.ToString("F2") + " sol";
+            SolBalance.text = currentLamports.ToString("F2");
             if (PublicKey != null)
             {
                 PublicKey.text = Web3.Account.PublicKey;
