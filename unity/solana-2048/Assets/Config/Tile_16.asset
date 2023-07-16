@@ -18,3 +18,4 @@ MonoBehaviour:
   Material: {fileID: 2100000, guid: 94a9ed7f2ecbf4f18bc893d657a4a579, type: 2}
   ShakeStrength: 0.05
   MaterialColor: {r: 0.9607843, g: 0.58431375, b: 0.3882353, a: 1}
+  BackgroundMaterial: {fileID: 2100000, guid: bd606042c10e64250ac5f628eba21a4a, type: 2}

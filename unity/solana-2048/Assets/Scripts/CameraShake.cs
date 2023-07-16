@@ -15,6 +15,7 @@ namespace SolPlay.FlappyGame.Runtime.Scripts
         public float CameraSize = 10.65f;
         public float Minimum = 5;
         public float FixedOffset = 0;
+        public float CamerPositionForPortrait = 3;
 
         private Camera Camera;
         private Vector3 StartPosition;
@@ -36,7 +37,7 @@ namespace SolPlay.FlappyGame.Runtime.Scripts
 
             if (Screen.width < Screen.height)
             {
-                Camera.gameObject.transform.position = StartPosition + new Vector3(0, 20, 0);
+                Camera.gameObject.transform.position = StartPosition + new Vector3(0, CamerPositionForPortrait, 0);
             }
             else
             {

@@ -19,6 +19,7 @@ public class BoardManager : MonoBehaviour
 
     public bool IsWaiting;
     public DateTime? SocketMessageTimeout = null;
+    public MeshRenderer BackgroundMeshRenderer;
     
     private Vector2Int? cachedInput = null;
     private bool isInitialized;
@@ -109,6 +110,8 @@ public class BoardManager : MonoBehaviour
             } 
         }
 
+        SetBackgroundImageOfHighestTile();
+        
         if (anyTileOutOfSync)
         {
             RefreshFromPlayerdata(playerData);
@@ -124,6 +127,24 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    private void SetBackgroundImageOfHighestTile()
+    {
+        TileConfig highestTileConfig = null;
+
+        foreach (var tile in tiles)
+        {
+            if (highestTileConfig == null || tile.currentConfig.Number > highestTileConfig.Number)
+            {
+                highestTileConfig = tile.currentConfig;
+            }
+        }
+
+        if (highestTileConfig != null && highestTileConfig.BackgroundMaterial != null)
+        {
+            BackgroundMeshRenderer.material = highestTileConfig.BackgroundMaterial;   
+        }
+    }
+    
     private void RefreshFromPlayerdata(PlayerData playerData)
     {
         OnGameReset();
@@ -142,7 +163,22 @@ public class BoardManager : MonoBehaviour
             await ServiceFactory.Resolve<Solana2048Service>().SubscribeToPlayerDataUpdates();
             return;
         }
-
+        if (Input.GetKeyUp(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.D))
+        {
+            cachedInput = Vector2Int.right;
+        }
+        if (Input.GetKeyUp(KeyCode.DownArrow) || Input.GetKeyUp(KeyCode.S))
+        {
+            cachedInput = Vector2Int.down;
+        }
+        if (Input.GetKeyUp(KeyCode.LeftArrow) || Input.GetKeyUp(KeyCode.A))
+        {
+            cachedInput = Vector2Int.left;
+        }
+        if (Input.GetKeyUp(KeyCode.UpArrow) || Input.GetKeyUp(KeyCode.W)) 
+        {
+            cachedInput = Vector2Int.up;
+        }
         if (Solana2048Service.Instance.CurrentPlayerData == null || Solana2048Service.Instance.CurrentPlayerData.GameOver)
         {
             cachedInput = null;
@@ -153,22 +189,7 @@ public class BoardManager : MonoBehaviour
         {
             return;
         }
-        if (Input.GetKeyUp(KeyCode.RightArrow))
-        {
-            cachedInput = Vector2Int.right;
-        }
-        if (Input.GetKeyUp(KeyCode.DownArrow))
-        {
-            cachedInput = Vector2Int.down;
-        }
-        if (Input.GetKeyUp(KeyCode.LeftArrow))
-        {
-            cachedInput = Vector2Int.left;
-        }
-        if (Input.GetKeyUp(KeyCode.UpArrow)) 
-        {
-            cachedInput = Vector2Int.up;
-        }
+
         if (cachedInput == Vector2Int.right)
         {
             Move(Vector2Int.right, WIDTH - 2, -1, 0, 1);
