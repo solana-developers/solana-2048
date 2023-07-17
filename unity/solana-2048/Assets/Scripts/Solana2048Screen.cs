@@ -63,7 +63,7 @@ public class Solana2048Screen : MonoBehaviour
 
     private async void OnInitGameDataButtonClicked()
     {
-        await Solana2048Service.Instance.InitGameDataAccount(Web3.Account.PublicKey);
+        await Solana2048Service.Instance.InitGameDataAccount();
     }
 
     private void OnNftsButtonClicked()

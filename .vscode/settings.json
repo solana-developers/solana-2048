@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./program/programs/lumberjack/Cargo.toml"
+    ]
+}

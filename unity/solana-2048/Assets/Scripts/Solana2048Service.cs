@@ -36,6 +36,7 @@ using UnityEngine;
         private SessionWallet sessionWallet;
         private PublicKey PlayerDataPDA;
         private PublicKey HighscorePDA;
+        private PublicKey PricePoolPDA;
         private bool _isInitialized;
         private LumberjackClient solana_2048_client;
         private int blockBump;
@@ -92,7 +93,7 @@ using UnityEngine;
             {
                 try
                 {
-                    await InitGameDataAccount(new PublicKey(message.NewNFt.metaplexData.data.mint));
+                    await InitGameDataAccount();
                 }
                 catch (Exception e)
                 {
@@ -112,6 +113,24 @@ using UnityEngine;
 
         private async void OnLogin(Account account)
         {
+            var programAccount =
+                await Web3.Instance.WalletBase.ActiveRpcClient.GetAccountInfoAsync(
+                    "PwDiXFxQsGra4sFFTT8r1QWRMd4vfumiWC1jfWNfdYT", Commitment.Confirmed);
+            
+            int emptyBytes = 0;
+            foreach (char dataByte in programAccount.Result.Value.Data[0])
+            {
+                if (dataByte == 65)
+                {
+                    emptyBytes++;
+                }
+                else
+                {
+                    emptyBytes = 0;
+                }
+            }
+            Debug.Log(emptyBytes);
+            
             var solBalance = await Web3.Instance.WalletBase.GetBalance(Commitment.Confirmed);
             if (solBalance < 20000)
             {
@@ -133,6 +152,10 @@ using UnityEngine;
                     {Encoding.UTF8.GetBytes("highscore_list_v2")},
                 Solana_2048_ProgramIdPubKey, out HighscorePDA, out byte bump2);
 
+            PublicKey.TryFindProgramAddress(new[]
+                    {Encoding.UTF8.GetBytes("price_pool")},
+                Solana_2048_ProgramIdPubKey, out PricePoolPDA, out byte bump3);
+
             ServiceFactory.Resolve<SolPlayWebSocketService>().Connect("wss://broken-empty-reel.solana-devnet.quiknode.pro/333a00f389fe630f4d331dd740b3aa6b040f8598/");
 
             solana_2048_client = new LumberjackClient(Web3.Rpc, Web3.WsRpc, Solana_2048_ProgramIdPubKey);
@@ -140,6 +163,7 @@ using UnityEngine;
             await SubscribeToPlayerDataUpdates();
 
             sessionWallet = await SessionWallet.GetSessionWallet(Solana_2048_ProgramIdPubKey, "ingame2");
+            Debug.Log("Session wallet pubkey: " + sessionWallet.Account.PublicKey);
             OnInitialDataLoaded?.Invoke();
             _isInitialized = true;
             
@@ -247,8 +271,12 @@ using UnityEngine;
             OnPlayerDataChanged?.Invoke(playerData);
         }*/
 
-        public async UniTask<RequestResult<string>> InitGameDataAccount(PublicKey avatar)
+        public async UniTask<bool> InitGameDataAccount()
         {
+            var selectedNft = ServiceFactory.Resolve<NftService>().SelectedNft;
+            PublicKey avatar = selectedNft == null
+                ? Web3.Account.PublicKey
+                : new PublicKey(selectedNft.metaplexData.data.mint);
             var tx = new Transaction()
             {
                 FeePayer = Web3.Account,
@@ -262,11 +290,12 @@ using UnityEngine;
             accounts.SystemProgram = SystemProgram.ProgramIdKey;
             accounts.Avatar = avatar;
             accounts.Highscore = HighscorePDA;
-            
+            accounts.PricePool = PricePoolPDA;
+
             var initTx = LumberjackProgram.InitPlayer(accounts, Solana_2048_ProgramIdPubKey);
             tx.Add(initTx);
 
-            if (!(await sessionWallet.IsSessionTokenInitialized()))
+            if (!(await IsSessionTokenInitialized()))
             {
                 var topUp = true;
 
@@ -277,29 +306,24 @@ using UnityEngine;
                 tx.PartialSign(new[] { Web3.Account, sessionWallet.Account });
             }
 
-            RequestResult<string> initResult;
-            try
+            bool success = await SendAndConfirmTransaction(Web3.Wallet, tx, "initialize");
+
+            if (!success)
             {
-                initResult =  await Web3.Wallet.SignAndSendTransaction(tx, commitment: Commitment.Confirmed);
+                Debug.LogError("Init was not successful");
             }
-            catch (Exception e)
-            {
-                Debug.LogError("There was an error signing transaction");
-                return null;
-            }
-            Debug.Log("init response: " + initResult.RawRpcResponse);
-            if (initResult.WasSuccessful)
-            {
-                Debug.Log("Confirming");
-                await UniTask.Delay(500); 
-                Debug.Log("confirmed");
-            }
-            Debug.Log("subscribe");
+            
             await SubscribeToPlayerDataUpdates();
-            Debug.Log("Init result: " + initResult.Result + " raw: " + initResult.RawRpcResponse);
-            return initResult;
+            return success;
         }
 
+        // TODO: this is temporary because the session wallet wont be available for another 31 confirmations withoue this workaround
+        public async Task<bool> IsSessionTokenInitialized()
+        {
+            var sessionTokenData = await Web3.Rpc.GetAccountInfoAsync(sessionWallet.SessionTokenPDA, Commitment.Confirmed);
+            return sessionTokenData.Result.Value != null;
+        }
+        
         public async Task<SessionWallet> RevokeSession()
         { 
             sessionWallet.Logout();
@@ -329,7 +353,7 @@ using UnityEngine;
 
             if (useSession)
             {
-                if (!(await sessionWallet.IsSessionTokenInitialized()))
+                if (!(await IsSessionTokenInitialized()))
                 {
                     var topUp = true;
 
@@ -364,7 +388,7 @@ using UnityEngine;
 
         // This is just a workaround since the Solana UnitySDK currently the confirm transactions gets stuck in webgl
         // because of Task.Delay(). Should be fixed soon.
-        private async void SendAndConfirmTransaction(WalletBase wallet, Transaction transaction, string label = "", Action onSucccess = null, Action<ErrorData> onError = null)
+        private async Task<bool> SendAndConfirmTransaction(WalletBase wallet, Transaction transaction, string label = "", Action onSucccess = null, Action<ErrorData> onError = null)
         {
             transactionsInProgress++;
             var res=  await wallet.SignAndSendTransaction(transaction, commitment: Commitment.Confirmed);
@@ -398,6 +422,8 @@ using UnityEngine;
                 {
                     onError?.Invoke(res.ErrorData);
                     Debug.LogError("Transaction failed to confirm.");
+                    transactionsInProgress--;
+                    return false;
                 }
                 else
                 {
@@ -414,13 +440,14 @@ using UnityEngine;
             }
             Debug.Log($"Send tranaction {label} with response: {res.RawRpcResponse}");
             transactionsInProgress--;
+            return true;
         }
 
         public async void RequestHighscore()
         {
             try
             {
-                var highscoreData = await solana_2048_client.GetHighscoreAsync(HighscorePDA, Commitment.Confirmed);
+                AccountResultWrapper<Highscore> highscoreData = await solana_2048_client.GetHighscoreAsync(HighscorePDA, Commitment.Confirmed);
                 if (highscoreData.ParsedResult != null)
                 {
                     CurrentHighscoreData = highscoreData.ParsedResult;
@@ -448,38 +475,56 @@ using UnityEngine;
             accounts.SystemProgram = SystemProgram.ProgramIdKey;
             accounts.Avatar = selectedNft == null ? Web3.Account.PublicKey : new PublicKey(selectedNft.metaplexData.data.mint);
             accounts.Highscore = HighscorePDA;
+            accounts.PricePool = PricePoolPDA;
             
             blockBump = (blockBump +1) % 250;
 
-            WalletBase walletToUse = null;
+            tx.FeePayer = Web3.Wallet.Account.PublicKey;
+            accounts.SessionToken = sessionWallet.SessionTokenPDA;
+            accounts.Signer = Web3.Wallet.Account.PublicKey;
+            var pushInDirectionInstruction = LumberjackProgram.Restart(accounts,Solana_2048_ProgramIdPubKey);
+            tx.Add(pushInDirectionInstruction);
+            Debug.Log("Has session -> sign and send session wallet");
             
-            if (!(await sessionWallet.IsSessionTokenInitialized()))
+            SendAndConfirmTransaction(Web3.Wallet, tx, "Reset game", onSucccess: () =>
             {
-                var topUp = true;
+                OnGameReset?.Invoke();
+                SubscribeToPlayerDataUpdates();
+            });
+        }
+        
+        
+        public async void ResetWeeklyHighscore()
+        {
+            var tx = new Transaction()
+            {
+                FeePayer = Web3.Account,
+                Instructions = new List<TransactionInstruction>(),
+                RecentBlockHash = await Web3.BlockHash(Commitment.Confirmed, false)
+            };
 
-                var validity = DateTimeOffset.UtcNow.AddHours(23).ToUnixTimeSeconds();
-                var createSessionIX = sessionWallet.CreateSessionIX(topUp, validity);
-                accounts.Signer = Web3.Account.PublicKey;
-                tx.Add(createSessionIX);
-                blockBump = (blockBump +1) % 250;
-                var restartInstruction = LumberjackProgram.Restart(accounts, 0, (byte) blockBump ,Solana_2048_ProgramIdPubKey);
-                tx.Add(restartInstruction);
-                Debug.Log("Has no session -> partial sign");
-                tx.PartialSign(new[] { Web3.Account, sessionWallet.Account });
-                walletToUse = Web3.Wallet;
-            }
-            else
+            ResetWeeklyHighscoreAccounts accounts = new ResetWeeklyHighscoreAccounts();
+            accounts.SystemProgram = SystemProgram.ProgramIdKey;
+            accounts.Highscore = HighscorePDA;
+            accounts.PricePool = PricePoolPDA;
+            AccountResultWrapper<Highscore> highscoreData = await solana_2048_client.GetHighscoreAsync(HighscorePDA, Commitment.Confirmed);
+            if (highscoreData.ParsedResult != null)
             {
-                tx.FeePayer = sessionWallet.Account.PublicKey;
-                accounts.SessionToken = sessionWallet.SessionTokenPDA;
-                accounts.Signer = sessionWallet.Account.PublicKey;
-                var pushInDirectionInstruction = LumberjackProgram.Restart(accounts, 0, (byte) blockBump ,Solana_2048_ProgramIdPubKey);
-                tx.Add(pushInDirectionInstruction);
-                Debug.Log("Has session -> sign and send session wallet");
-                walletToUse = sessionWallet;
+                CurrentHighscoreData = highscoreData.ParsedResult;
+                OnHighscoreChanged?.Invoke(highscoreData.ParsedResult);
             }
+
+            accounts.Place1 = highscoreData.ParsedResult.Weekly[0].Player;
             
-            SendAndConfirmTransaction(walletToUse, tx, "Reset game", onSucccess: () =>
+            blockBump = (blockBump +1) % 250;
+
+            tx.FeePayer = Web3.Wallet.Account.PublicKey;
+            accounts.Signer = Web3.Wallet.Account.PublicKey;
+            var pushInDirectionInstruction = LumberjackProgram.ResetWeeklyHighscore(accounts,Solana_2048_ProgramIdPubKey);
+            tx.Add(pushInDirectionInstruction);
+            Debug.Log("Has session -> sign and send session wallet");
+            
+            SendAndConfirmTransaction(Web3.Wallet, tx, "Reset game", onSucccess: () =>
             {
                 OnGameReset?.Invoke();
                 SubscribeToPlayerDataUpdates();

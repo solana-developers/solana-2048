@@ -7,14 +7,15 @@ public class TouchInputHandler : MonoBehaviour
 		bool isSwipe;
 		float fingerStartTime;
 		Vector2 fingerStartPos;
-		private float minSwipeDist = 30.0f;
-		private float maxSwipeTime = 0.5f;
+		public float minSwipeDist = 30.0f;
+		public float maxSwipeTime = 0.5f;
 
 		public void OnUpdate() {
 			
 			if (Input.touchCount > 0) {
 				foreach (Touch touch in Input.touches) {
-					
+					Debug.Log("Touch: " + touch.phase);
+
 					switch (touch.phase) {
 						case TouchPhase.Began:
 							/* this is a new touch */
@@ -33,6 +34,8 @@ public class TouchInputHandler : MonoBehaviour
 							float gestureTime = Time.time - fingerStartTime;
 							float gestureDist = (touch.position - fingerStartPos).magnitude;
 
+							Debug.Log("Touch: time" + gestureTime + " dist: " + gestureDist);
+							
 							if (isSwipe && gestureTime < maxSwipeTime && gestureDist > minSwipeDist) {
 								Vector2 direction = touch.position - fingerStartPos;
 								Vector2 swipeType = Vector2.zero;

@@ -885,7 +885,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &327582529
 RectTransform:
   m_ObjectHideFlags: 0
@@ -900,7 +900,7 @@ RectTransform:
   m_Children:
   - {fileID: 1957529230}
   m_Father: {fileID: 895286102}
-  m_RootOrder: 6
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -2191,8 +2191,8 @@ RectTransform:
   - {fileID: 554286645}
   - {fileID: 1795529317}
   - {fileID: 640482276}
-  - {fileID: 327582529}
   - {fileID: 1181196817}
+  - {fileID: 327582529}
   - {fileID: 1813595480}
   - {fileID: 1518684285}
   - {fileID: 267906462}
@@ -2456,7 +2456,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4543230662569328020, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
       propertyPath: m_RootOrder
-      value: 7
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 4543230662569328020, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
       propertyPath: m_AnchorMax.x

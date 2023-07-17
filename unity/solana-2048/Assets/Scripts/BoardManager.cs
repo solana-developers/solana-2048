@@ -181,6 +181,12 @@ public class BoardManager : MonoBehaviour
         {
             return;
         }
+
+        if (TouchInputHandler.InputState != null)
+        {
+            cachedInput = TouchInputHandler.InputState;
+            TouchInputHandler.InputState = null;
+        }
         if (Input.GetKeyUp(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.D))
         {
             cachedInput = Vector2Int.right;
@@ -348,18 +354,22 @@ public class BoardManager : MonoBehaviour
         {
             return;
         }
-        Tile tileInstance = Instantiate(TilePrefab, transform);
         var targetCell = AllCells[i, j];
+        if (targetCell.Tile != null)
+        {
+            Debug.LogError("Target cell already full: " + targetCell.Tile.currentConfig.Number);
+            return;
+        }
+        
+        Tile tileInstance = Instantiate(TilePrefab, transform);
+        
         tileInstance.transform.position = targetCell.transform.position;
         TileConfig newConfig = FindTileConfigByNumber(number);
         if (overrideColor != null)
         {
             newConfig.MaterialColor = overrideColor.Value;
         }
-        if (targetCell.Tile != null)
-        {
-            Debug.LogError("Target cell already full: " + targetCell.Tile.currentConfig.Number);
-        }
+
         tileInstance.Init(newConfig);
         tileInstance.Spawn(targetCell);
         tiles.Add(tileInstance);
