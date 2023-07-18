@@ -66,6 +66,8 @@ namespace SolPlay.Scripts.Ui
                 return;
             }
 
+            ServiceFactory.Resolve<NftService>().LoadNfts();
+
             NftItemListView.UpdateContent();
             NftItemListView.SetData(nft =>
             {

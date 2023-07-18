@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks.Triggers;
 using Frictionless;
 using Solana.Unity.SDK.Nft;
 using SolPlay.Scripts.Services;
@@ -83,6 +84,7 @@ namespace SolPlay.Scripts.Ui
             {
                 if (nft.CurrentSolPlayNft.metaplexData.data.mint == newSolPlayNft.metaplexData.data.mint)
                 {
+                    nft.SetData(newSolPlayNft, OnItemClicked);
                     // already exists
                     return;
                 }

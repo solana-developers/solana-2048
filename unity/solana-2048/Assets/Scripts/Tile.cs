@@ -74,7 +74,8 @@ public class Tile : MonoBehaviour
             CameraShake.Shake(0.2f, cell.Tile.currentConfig.ShakeStrength);
             if (cell.Tile.currentConfig.MergeFx != null)
             {
-                var instance = Instantiate(cell.Tile.currentConfig.MergeFx, cell.Tile.transform.position, Quaternion.Euler(90, 0,0));
+                var instance = Instantiate(cell.Tile.currentConfig.MergeFx, cell.transform);
+                cell.Tile.transform.DOPunchScale(new Vector3(0.1f, 0.1f, 0.1f), 0.3f);
                 instance.AddComponent<DestroyDelayed>();
             }
         });    

@@ -28,6 +28,7 @@ namespace SolPlay.Scripts.Services
 
         public void Awake()
         {
+            ResetSelectedNft();
             if (ServiceFactory.Resolve<NftService>() != null)
             {
                 Destroy(gameObject);
@@ -51,7 +52,7 @@ namespace SolPlay.Scripts.Services
         public void LoadNfts()
         {
             LoadedNfts.Clear();
-            Web3.LoadNFTs();
+            Web3.LoadNFTs(true, true, 300);
             IsLoadingTokenAccounts = true;
             Web3.OnNFTsUpdate += (nfts, totalAmount) =>
             {
@@ -115,7 +116,7 @@ namespace SolPlay.Scripts.Services
             return nft.metaplexData.data.mint == GetSelectedNftPubKey();
         }
 
-        private string GetSelectedNftPubKey()
+        public string GetSelectedNftPubKey()
         {
             return PlayerPrefs.GetString("SelectedNft");
         }

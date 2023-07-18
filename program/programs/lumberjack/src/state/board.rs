@@ -17,7 +17,7 @@ impl BoardData {
         board_data
     }
 
-    pub fn Init(&mut self) -> Self {
+    pub fn init(&mut self) -> Self {
         let data: [[u32; 4]; 4] = [[0; 4]; 4];
         let mut board_data = Self { data };
         msg!("insert");

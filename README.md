@@ -1,197 +1,46 @@
 How to run this example:
 
+Many things are still called lumberjack because this project is based on the lumberjack example from the game starter kits.
+
 Anchor program
 1. Install the [Anchor CLI](https://project-serum.github.io/anchor/getting-started/installation.html)
-2. `cd lumberjack` `cd program` to end the program directory
+2. `cd solana-2048` `cd program` to end the program directory
 3. Run `anchor build` to build the program
 4. Run `anchor deploy` to deploy the program
 5. Copy the program id into the lib.rs and anchor.toml file
 6. Build and deploy again
 
-Next js client
-1. Install [Node.js](https://nodejs.org/en/download/)
-2. Copy the program id into app/utils/anchor.ts
-2. `cd lumberjack` `cd app` to end the app directory
-3. Run `yarn install` to install node modules
-4. Run `yarn dev` to start the client
+Unity client
+1. Install Unity (https://unity.com)
+2. Run the Scene Solana-2048
+3. While in editor press the login editor button on the bottom left
+
+To generate a new version of the c# client use:
+generate c# client: 
+https://solanacookbook.com/gaming/porting-anchor-to-unity.html#generating-the-client
+dotnet tool install Solana.Unity.Anchor.Tool
+dotnet anchorgen -i target/idl/solana_twentyfourtyeight.json -o target/idl/ProgramCode.cs
 
 
-# Energy System  
+# Solana-2048  
 
-Many casual games in traditional gaming use energy systems. This is how you can build it on chain.
-Recommended to start with the Solana cookbook hello world example. 
+2048 is a simple game which is played on a 4x4 grid. The player can move the tiles in four directions.
+If two tiles with the same number touch, they merge into one tile with the sum of the two tiles.
+The goal of the game is to create a tile with the number 2048 or above.
 
-## Anchor program 
+## Everything is on chain 
+In the Solana version of it every transaction is an on chain transaction and it is using an auto approve system called
+gum session keys, so signing every transaction is not needed.
 
-Here we will build a program which refills energy over time which the player can then use to perform actions in the game. 
-In our example it will be a lumber jack which chops trees. Every tree will reward on wood and cost one energy. 
+## Game state is saved on any NFT 
+Furthermore the game state is bound to an NFT ming if the player selects an NFT. 
+So the game state can actually be send to another player by sending the NFT to him.
 
-### Creating the player account
+## Weekly highscore
+With every new game a tiny amount of lamports is send to the program. This is then payed out to the player with the highest score at the end of the week. (This is supposed to happen with a clockwork thread, but currently its manual because I cant figure out how to make it work together with session keys. If you can figure it out please let me know.)
 
-First the player needs to create an account which saves the state of our player. Notice the last_login time which will save the current unix time stamp of the player he interacts with the program. 
-Like this we will be able to calculate how much energy the player has at a certain point in time.  
-We also have a value for wood which will store the wood the lumber jack chucks in the game.
+## Client
+The client is written in the game engine Unity and is using the Solana Unity SDK to interact with the Solana blockchain.
 
-```rust
-
-pub fn init_player(ctx: Context<InitPlayer>) -> Result<()> {
-    ctx.accounts.player.energy = MAX_ENERGY;
-    ctx.accounts.player.last_login = Clock::get()?.unix_timestamp;
-    Ok(())
-}
-
-...
-
-#[derive(Accounts)]
-pub struct InitPlayer <'info> {
-    #[account( 
-        init, 
-        payer = signer,
-        space = 1000,
-        seeds = [b"player".as_ref(), signer.key().as_ref()],
-        bump,
-    )]
-    pub player: Account<'info, PlayerData>,
-    #[account(mut)]
-    pub signer: Signer<'info>,
-    pub system_program: Program<'info, System>,
-}
-
-#[account]
-pub struct PlayerData {
-    pub name: String,
-    pub level: u8,
-    pub xp: u64,
-    pub wood: u64,
-    pub energy: u64,
-    pub last_login: i64
-}
-```
-
-### Choping trees
-
-Then whenever the player calls the chop_tree instruction we will check if the player has enough energy and reward him with one wood. 
-
-```rust
-    #[error_code]
-    pub enum ErrorCode {
-        #[msg("Not enough energy")]
-        NotEnoughEnergy,
-    }
-
-    pub fn chop_tree(mut ctx: Context<ChopTree>) -> Result<()> {
-        let account = &mut ctx.accounts;
-        update_energy(account)?;
-
-        if ctx.accounts.player.energy == 0 {
-            return err!(ErrorCode::NotEnoughEnergy);
-        }
-
-        ctx.accounts.player.wood = ctx.accounts.player.wood + 1;
-        ctx.accounts.player.energy = ctx.accounts.player.energy - 1;
-        msg!("You chopped a tree and got 1 log. You have {} wood and {} energy left.", ctx.accounts.player.wood, ctx.accounts.player.energy);
-        Ok(())
-    }
-```
-
-### Calculating the energy
-
-The interesting part happens in the update_energy function. We check how much time has passed and calculate the energy that the player will have at the given time. 
-The same thing we will also do in the client. So we basically lazily update the energy instead of polling it all the time. 
-The is a common technic in game development. 
-
-```rust
-
-const TIME_TO_REFILL_ENERGY: i64 = 60;
-const MAX_ENERGY: u64 = 10;
-
-pub fn update_energy(ctx: &mut ChopTree) -> Result<()> {
-    let mut time_passed: i64 = &Clock::get()?.unix_timestamp - &ctx.player.last_login;
-    let mut time_spent: i64 = 0;
-    while time_passed > TIME_TO_REFILL_ENERGY {
-        ctx.player.energy = ctx.player.energy + 1;
-        time_passed -= TIME_TO_REFILL_ENERGY;
-        time_spent += TIME_TO_REFILL_ENERGY;
-        if ctx.player.energy == MAX_ENERGY {
-            break;
-        }
-    }
-
-    if ctx.player.energy >= MAX_ENERGY {
-        ctx.player.last_login = Clock::get()?.unix_timestamp;
-    } else {
-        ctx.player.last_login += time_spent;
-    }
-
-    Ok(())
-}
-```
-
-## Js client 
-
-### Subscribe to account updates
-
-```js
-useEffect(() => {
-    if (!publicKey) {return;}
-    const [pda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("player", "utf8"), 
-        publicKey.toBuffer()],
-        new PublicKey(LUMBERJACK_PROGRAM_ID)
-      );
-    try {
-      program.account.playerData.fetch(pda).then((data) => {
-        setGameState(data);
-      });
-    } catch (e) {
-      window.alert("No player data found, please init!");
-    }
- 
-    connection.onAccountChange(pda, (account) => {
-        setGameState(program.coder.accounts.decode("playerData", account.data));
-    });
-
-  }, [publicKey]);
-```
-
-### Calculate energy and show countdown
-
-In the java script client we can then perform the same logic and show a countdown timer for the player so that he knows when the next energy will be available:
-
-```js
-useEffect(() => {
-    const interval = setInterval(async () => {
-        if (gameState == null || gameState.lastLogin == undefined || gameState.energy >= 10) {return;}
-        const lastLoginTime=gameState.lastLogin * 1000;
-        let timePassed = ((Date.now() - lastLoginTime) / 1000);
-        while (timePassed > TIME_TO_REFILL_ENERGY && gameState.energy < MAX_ENERGY) {
-            gameState.energy = (parseInt(gameState.energy) + 1);
-            gameState.lastLogin = parseInt(gameState.lastLogin) + TIME_TO_REFILL_ENERGY;
-            timePassed -= TIME_TO_REFILL_ENERGY;
-        }
-        setTimePassed(timePassed);
-        let nextEnergyIn = Math.floor(TIME_TO_REFILL_ENERGY -timePassed);
-        if (nextEnergyIn < TIME_TO_REFILL_ENERGY && nextEnergyIn > 0) {
-            setEnergyNextIn(nextEnergyIn);
-        } else {
-            setEnergyNextIn(0);
-        }
-
-    }, 1000);
-
-    return () => clearInterval(interval);
-}, [gameState, timePassed]);
-
-...
-
-{(gameState && <div className="flex flex-col items-center">
-    {("Wood: " + gameState.wood + " Energy: " + gameState.energy + " Next energy in: " + nextEnergyIn )}
-</div>)} 
-
-  ```
-
-With this you can now build any energy based game and even if someone builds a bot for the game the most he can do is play optimally, which maybe even easier to achieve when playing normally depending on the logic of your game.
-
-This game becomes even better when combined with the Token example from Solana Cookbook and you actually drop some spl token to the players. 
-
-Here is a complete example based on the solana dapp scaffold: 
+## Program 
+The program is written Anchor and rust. Anchor is a framework for Solana which makes it easier to write programs for Solana.

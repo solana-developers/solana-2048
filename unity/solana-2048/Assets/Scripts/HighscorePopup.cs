@@ -1,6 +1,6 @@
 using System.Linq;
-using Lumberjack.Accounts;
-using Lumberjack.Types;
+using SolanaTwentyfourtyeight.Accounts;
+using SolanaTwentyfourtyeight.Types;
 using SolPlay.Scripts.Services;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,6 +21,7 @@ namespace SolPlay.Scripts.Ui
         public CanvasGroup GlobalButtonCanvasGroup;
         public GameObject GlobalArrow;
         public GameObject WeeklyArrow;
+        public Button ResetWeeklyHighscore;
 
         private Highscore currentHighscore;
         private bool weekly = true;
@@ -29,6 +30,7 @@ namespace SolPlay.Scripts.Ui
         {
             WeeklyButton.onClick.AddListener(OnWeeklyButtonClicked);
             GlobalButton.onClick.AddListener(OnGlobalButtonClicked);
+            ResetWeeklyHighscore.onClick.AddListener(OnResetWeeklyHighscoreClicked);
             GlobalButtonCanvasGroup.alpha = 0.5f;
             WeeklyButtonCanvasGroup.alpha = 1f;
             GlobalArrow.gameObject.SetActive(false);
@@ -47,6 +49,11 @@ namespace SolPlay.Scripts.Ui
             UpdateContent();
         }
 
+        private void OnResetWeeklyHighscoreClicked()
+        {
+            Solana2048Service.Instance.ResetWeeklyHighscore();
+        }
+        
         public override void Open(UiService.UiData uiData)
         {
             Solana2048Service.Instance.RequestHighscore();

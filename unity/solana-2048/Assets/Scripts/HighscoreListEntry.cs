@@ -1,7 +1,7 @@
 using System;
 using Cysharp.Threading.Tasks;
 using Frictionless;
-using Lumberjack.Types;
+using SolanaTwentyfourtyeight.Types;
 using Solana.Unity.SDK;
 using Solana.Unity.SDK.Nft;
 using SolPlay.Scripts.Services;

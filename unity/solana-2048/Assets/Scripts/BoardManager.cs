@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using DefaultNamespace;
 using Frictionless;
-using Lumberjack.Accounts;
+using SolanaTwentyfourtyeight.Accounts;
 using UnityEngine;
 
 public class BoardManager : MonoBehaviour

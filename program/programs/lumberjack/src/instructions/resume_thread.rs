@@ -1,7 +1,7 @@
 //! Instruction: resume_thread
+use crate::THREAD_AUTHORITY_SEED;
 use anchor_lang::prelude::*;
-use crate::{THREAD_AUTHORITY_SEED};
-use clockwork_sdk::state::{Thread};
+use clockwork_sdk::state::Thread;
 
 pub fn resume_thread(ctx: Context<ResumeThread>, _thread_id: Vec<u8>) -> Result<()> {
     let clockwork_program = &ctx.accounts.clockwork_program;
@@ -10,16 +10,14 @@ pub fn resume_thread(ctx: Context<ResumeThread>, _thread_id: Vec<u8>) -> Result<
 
     // Resume Thread
     let bump = *ctx.bumps.get("thread_authority").unwrap();
-    clockwork_sdk::cpi::thread_resume(
-        CpiContext::new_with_signer(
-            clockwork_program.to_account_info(),
-            clockwork_sdk::cpi::ThreadResume {
-                thread: thread.to_account_info(),
-                authority: thread_authority.to_account_info(),
-            },
-            &[&[THREAD_AUTHORITY_SEED, &[bump]]],
-        )
-    )?;
+    clockwork_sdk::cpi::thread_resume(CpiContext::new_with_signer(
+        clockwork_program.to_account_info(),
+        clockwork_sdk::cpi::ThreadResume {
+            thread: thread.to_account_info(),
+            authority: thread_authority.to_account_info(),
+        },
+        &[&[THREAD_AUTHORITY_SEED, &[bump]]],
+    ))?;
 
     Ok(())
 }

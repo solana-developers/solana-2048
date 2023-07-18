@@ -12,13 +12,13 @@ using Solana.Unity.Rpc.Core.Http;
 using Solana.Unity.Rpc.Core.Sockets;
 using Solana.Unity.Rpc.Types;
 using Solana.Unity.Wallet;
-using Lumberjack;
-using Lumberjack.Program;
-using Lumberjack.Errors;
-using Lumberjack.Accounts;
-using Lumberjack.Types;
+using SolanaTwentyfourtyeight;
+using SolanaTwentyfourtyeight.Program;
+using SolanaTwentyfourtyeight.Errors;
+using SolanaTwentyfourtyeight.Accounts;
+using SolanaTwentyfourtyeight.Types;
 
-namespace Lumberjack
+namespace SolanaTwentyfourtyeight
 {
     namespace Accounts
     {
@@ -44,6 +44,10 @@ namespace Lumberjack
             public byte NewTileY { get; set; }
 
             public uint NewTileLevel { get; set; }
+
+            public uint Xp { get; set; }
+
+            public uint Level { get; set; }
 
             public static PlayerData Deserialize(ReadOnlySpan<byte> _data)
             {
@@ -73,6 +77,10 @@ namespace Lumberjack
                 result.NewTileY = _data.GetU8(offset);
                 offset += 1;
                 result.NewTileLevel = _data.GetU32(offset);
+                offset += 4;
+                result.Xp = _data.GetU32(offset);
+                offset += 4;
+                result.Level = _data.GetU32(offset);
                 offset += 4;
                 return result;
             }
@@ -143,7 +151,7 @@ namespace Lumberjack
 
     namespace Errors
     {
-        public enum LumberjackErrorKind : uint
+        public enum SolanaTwentyfourtyeightErrorKind : uint
         {
             WrongAuthority = 6000U,
             GameNotOverYet = 6001U
@@ -152,6 +160,40 @@ namespace Lumberjack
 
     namespace Types
     {
+        public partial class HighscoreEntry
+        {
+            public uint Score { get; set; }
+
+            public PublicKey Player { get; set; }
+
+            public PublicKey Nft { get; set; }
+
+            public int Serialize(byte[] _data, int initialOffset)
+            {
+                int offset = initialOffset;
+                _data.WriteU32(Score, offset);
+                offset += 4;
+                _data.WritePubKey(Player, offset);
+                offset += 32;
+                _data.WritePubKey(Nft, offset);
+                offset += 32;
+                return offset - initialOffset;
+            }
+
+            public static int Deserialize(ReadOnlySpan<byte> _data, int initialOffset, out HighscoreEntry result)
+            {
+                int offset = initialOffset;
+                result = new HighscoreEntry();
+                result.Score = _data.GetU32(offset);
+                offset += 4;
+                result.Player = _data.GetPubKey(offset);
+                offset += 32;
+                result.Nft = _data.GetPubKey(offset);
+                offset += 32;
+                return offset - initialOffset;
+            }
+        }
+
         public partial class BoardData
         {
             public uint[][] Data { get; set; }
@@ -189,45 +231,11 @@ namespace Lumberjack
                 return offset - initialOffset;
             }
         }
-
-        public partial class HighscoreEntry
-        {
-            public uint Score { get; set; }
-
-            public PublicKey Player { get; set; }
-
-            public PublicKey Nft { get; set; }
-
-            public int Serialize(byte[] _data, int initialOffset)
-            {
-                int offset = initialOffset;
-                _data.WriteU32(Score, offset);
-                offset += 4;
-                _data.WritePubKey(Player, offset);
-                offset += 32;
-                _data.WritePubKey(Nft, offset);
-                offset += 32;
-                return offset - initialOffset;
-            }
-
-            public static int Deserialize(ReadOnlySpan<byte> _data, int initialOffset, out HighscoreEntry result)
-            {
-                int offset = initialOffset;
-                result = new HighscoreEntry();
-                result.Score = _data.GetU32(offset);
-                offset += 4;
-                result.Player = _data.GetPubKey(offset);
-                offset += 32;
-                result.Nft = _data.GetPubKey(offset);
-                offset += 32;
-                return offset - initialOffset;
-            }
-        }
     }
 
-    public partial class LumberjackClient : TransactionalBaseClient<LumberjackErrorKind>
+    public partial class SolanaTwentyfourtyeightClient : TransactionalBaseClient<SolanaTwentyfourtyeightErrorKind>
     {
-        public LumberjackClient(IRpcClient rpcClient, IStreamingRpcClient streamingRpcClient, PublicKey programId) : base(rpcClient, streamingRpcClient, programId)
+        public SolanaTwentyfourtyeightClient(IRpcClient rpcClient, IStreamingRpcClient streamingRpcClient, PublicKey programId) : base(rpcClient, streamingRpcClient, programId)
         {
         }
 
@@ -329,31 +337,49 @@ namespace Lumberjack
 
         public async Task<RequestResult<string>> SendInitPlayerAsync(InitPlayerAccounts accounts, PublicKey feePayer, Func<byte[], PublicKey, byte[]> signingCallback, PublicKey programId)
         {
-            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.LumberjackProgram.InitPlayer(accounts, programId);
+            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.SolanaTwentyfourtyeightProgram.InitPlayer(accounts, programId);
             return await SignAndSendTransaction(instr, feePayer, signingCallback);
         }
 
         public async Task<RequestResult<string>> SendResetWeeklyHighscoreAsync(ResetWeeklyHighscoreAccounts accounts, PublicKey feePayer, Func<byte[], PublicKey, byte[]> signingCallback, PublicKey programId)
         {
-            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.LumberjackProgram.ResetWeeklyHighscore(accounts, programId);
+            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.SolanaTwentyfourtyeightProgram.ResetWeeklyHighscore(accounts, programId);
             return await SignAndSendTransaction(instr, feePayer, signingCallback);
         }
 
         public async Task<RequestResult<string>> SendPushInDirectionAsync(PushInDirectionAccounts accounts, byte direction, byte counter, PublicKey feePayer, Func<byte[], PublicKey, byte[]> signingCallback, PublicKey programId)
         {
-            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.LumberjackProgram.PushInDirection(accounts, direction, counter, programId);
+            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.SolanaTwentyfourtyeightProgram.PushInDirection(accounts, direction, counter, programId);
             return await SignAndSendTransaction(instr, feePayer, signingCallback);
         }
 
         public async Task<RequestResult<string>> SendRestartAsync(RestartAccounts accounts, PublicKey feePayer, Func<byte[], PublicKey, byte[]> signingCallback, PublicKey programId)
         {
-            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.LumberjackProgram.Restart(accounts, programId);
+            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.SolanaTwentyfourtyeightProgram.Restart(accounts, programId);
             return await SignAndSendTransaction(instr, feePayer, signingCallback);
         }
 
-        protected override Dictionary<uint, ProgramError<LumberjackErrorKind>> BuildErrorsDictionary()
+        public async Task<RequestResult<string>> SendStartThreadAsync(StartThreadAccounts accounts, byte[] threadId, PublicKey feePayer, Func<byte[], PublicKey, byte[]> signingCallback, PublicKey programId)
         {
-            return new Dictionary<uint, ProgramError<LumberjackErrorKind>>{{6000U, new ProgramError<LumberjackErrorKind>(LumberjackErrorKind.WrongAuthority, "Wrong Authority")}, {6001U, new ProgramError<LumberjackErrorKind>(LumberjackErrorKind.GameNotOverYet, "Game not over yet")}, };
+            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.SolanaTwentyfourtyeightProgram.StartThread(accounts, threadId, programId);
+            return await SignAndSendTransaction(instr, feePayer, signingCallback);
+        }
+
+        public async Task<RequestResult<string>> SendPauseThreadAsync(PauseThreadAccounts accounts, byte[] threadId, PublicKey feePayer, Func<byte[], PublicKey, byte[]> signingCallback, PublicKey programId)
+        {
+            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.SolanaTwentyfourtyeightProgram.PauseThread(accounts, threadId, programId);
+            return await SignAndSendTransaction(instr, feePayer, signingCallback);
+        }
+
+        public async Task<RequestResult<string>> SendResumeThreadAsync(ResumeThreadAccounts accounts, byte[] threadId, PublicKey feePayer, Func<byte[], PublicKey, byte[]> signingCallback, PublicKey programId)
+        {
+            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.SolanaTwentyfourtyeightProgram.ResumeThread(accounts, threadId, programId);
+            return await SignAndSendTransaction(instr, feePayer, signingCallback);
+        }
+
+        protected override Dictionary<uint, ProgramError<SolanaTwentyfourtyeightErrorKind>> BuildErrorsDictionary()
+        {
+            return new Dictionary<uint, ProgramError<SolanaTwentyfourtyeightErrorKind>>{{6000U, new ProgramError<SolanaTwentyfourtyeightErrorKind>(SolanaTwentyfourtyeightErrorKind.WrongAuthority, "Wrong Authority")}, {6001U, new ProgramError<SolanaTwentyfourtyeightErrorKind>(SolanaTwentyfourtyeightErrorKind.GameNotOverYet, "Game not over yet")}, };
         }
     }
 
@@ -395,8 +421,6 @@ namespace Lumberjack
 
             public PublicKey Highscore { get; set; }
 
-            public PublicKey PricePool { get; set; }
-
             public PublicKey Signer { get; set; }
 
             public PublicKey Avatar { get; set; }
@@ -421,7 +445,44 @@ namespace Lumberjack
             public PublicKey SystemProgram { get; set; }
         }
 
-        public static class LumberjackProgram
+        public class StartThreadAccounts
+        {
+            public PublicKey GameDataAccount { get; set; }
+
+            public PublicKey ClockworkProgram { get; set; }
+
+            public PublicKey Payer { get; set; }
+
+            public PublicKey SystemProgram { get; set; }
+
+            public PublicKey Thread { get; set; }
+
+            public PublicKey ThreadAuthority { get; set; }
+        }
+
+        public class PauseThreadAccounts
+        {
+            public PublicKey Payer { get; set; }
+
+            public PublicKey ClockworkProgram { get; set; }
+
+            public PublicKey Thread { get; set; }
+
+            public PublicKey ThreadAuthority { get; set; }
+        }
+
+        public class ResumeThreadAccounts
+        {
+            public PublicKey Payer { get; set; }
+
+            public PublicKey ClockworkProgram { get; set; }
+
+            public PublicKey Thread { get; set; }
+
+            public PublicKey ThreadAuthority { get; set; }
+        }
+
+        public static class SolanaTwentyfourtyeightProgram
         {
             public static Solana.Unity.Rpc.Models.TransactionInstruction InitPlayer(InitPlayerAccounts accounts, PublicKey programId)
             {
@@ -439,7 +500,7 @@ namespace Lumberjack
             public static Solana.Unity.Rpc.Models.TransactionInstruction ResetWeeklyHighscore(ResetWeeklyHighscoreAccounts accounts, PublicKey programId)
             {
                 List<Solana.Unity.Rpc.Models.AccountMeta> keys = new()
-                {Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.Place1, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.PricePool, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Signer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false)};
+                {Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Place1, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.PricePool, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Signer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false)};
                 byte[] _data = new byte[1200];
                 int offset = 0;
                 _data.WriteU64(9998402410022544069UL, offset);
@@ -452,7 +513,7 @@ namespace Lumberjack
             public static Solana.Unity.Rpc.Models.TransactionInstruction PushInDirection(PushInDirectionAccounts accounts, byte direction, byte counter, PublicKey programId)
             {
                 List<Solana.Unity.Rpc.Models.AccountMeta> keys = new()
-                {Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SessionToken == null ? programId : accounts.SessionToken, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Player, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.PricePool, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Signer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.Avatar, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false)};
+                {Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SessionToken == null ? programId : accounts.SessionToken, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Player, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Signer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.Avatar, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false)};
                 byte[] _data = new byte[1200];
                 int offset = 0;
                 _data.WriteU64(5017331766430244341UL, offset);
@@ -469,11 +530,62 @@ namespace Lumberjack
             public static Solana.Unity.Rpc.Models.TransactionInstruction Restart(RestartAccounts accounts, PublicKey programId)
             {
                 List<Solana.Unity.Rpc.Models.AccountMeta> keys = new()
-                {Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SessionToken == null ? programId : accounts.SessionToken, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Player, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.PricePool, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Signer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.Avatar, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false)};
+                {Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SessionToken == null ? programId : accounts.SessionToken, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Player, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.PricePool, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Signer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.Avatar, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false)};
                 byte[] _data = new byte[1200];
                 int offset = 0;
                 _data.WriteU64(2919679679907439389UL, offset);
                 offset += 8;
+                byte[] resultData = new byte[offset];
+                Array.Copy(_data, resultData, offset);
+                return new Solana.Unity.Rpc.Models.TransactionInstruction{Keys = keys, ProgramId = programId.KeyBytes, Data = resultData};
+            }
+
+            public static Solana.Unity.Rpc.Models.TransactionInstruction StartThread(StartThreadAccounts accounts, byte[] threadId, PublicKey programId)
+            {
+                List<Solana.Unity.Rpc.Models.AccountMeta> keys = new()
+                {Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.GameDataAccount, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.ClockworkProgram, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Payer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Thread, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.ThreadAuthority, false)};
+                byte[] _data = new byte[1200];
+                int offset = 0;
+                _data.WriteU64(15046500361448809729UL, offset);
+                offset += 8;
+                _data.WriteS32(threadId.Length, offset);
+                offset += 4;
+                _data.WriteSpan(threadId, offset);
+                offset += threadId.Length;
+                byte[] resultData = new byte[offset];
+                Array.Copy(_data, resultData, offset);
+                return new Solana.Unity.Rpc.Models.TransactionInstruction{Keys = keys, ProgramId = programId.KeyBytes, Data = resultData};
+            }
+
+            public static Solana.Unity.Rpc.Models.TransactionInstruction PauseThread(PauseThreadAccounts accounts, byte[] threadId, PublicKey programId)
+            {
+                List<Solana.Unity.Rpc.Models.AccountMeta> keys = new()
+                {Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Payer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.ClockworkProgram, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Thread, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.ThreadAuthority, false)};
+                byte[] _data = new byte[1200];
+                int offset = 0;
+                _data.WriteU64(8210672603296534645UL, offset);
+                offset += 8;
+                _data.WriteS32(threadId.Length, offset);
+                offset += 4;
+                _data.WriteSpan(threadId, offset);
+                offset += threadId.Length;
+                byte[] resultData = new byte[offset];
+                Array.Copy(_data, resultData, offset);
+                return new Solana.Unity.Rpc.Models.TransactionInstruction{Keys = keys, ProgramId = programId.KeyBytes, Data = resultData};
+            }
+
+            public static Solana.Unity.Rpc.Models.TransactionInstruction ResumeThread(ResumeThreadAccounts accounts, byte[] threadId, PublicKey programId)
+            {
+                List<Solana.Unity.Rpc.Models.AccountMeta> keys = new()
+                {Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Payer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.ClockworkProgram, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Thread, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.ThreadAuthority, false)};
+                byte[] _data = new byte[1200];
+                int offset = 0;
+                _data.WriteU64(5675786826980878817UL, offset);
+                offset += 8;
+                _data.WriteS32(threadId.Length, offset);
+                offset += 4;
+                _data.WriteSpan(threadId, offset);
+                offset += threadId.Length;
                 byte[] resultData = new byte[offset];
                 Array.Copy(_data, resultData, offset);
                 return new Solana.Unity.Rpc.Models.TransactionInstruction{Keys = keys, ProgramId = programId.KeyBytes, Data = resultData};

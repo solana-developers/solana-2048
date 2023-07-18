@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Number: 128
   Prefab: {fileID: 0}
-  MergeFx: {fileID: 1164094289420900, guid: a6dd7f2908dfe2d4297923b7528f3538, type: 3}
+  MergeFx: {fileID: 129898, guid: 36bdc02b23d9ca94d93bd715c0cca5c0, type: 3}
   Material: {fileID: 2100000, guid: 94a9ed7f2ecbf4f18bc893d657a4a579, type: 2}
   ShakeStrength: 0.05
   MaterialColor: {r: 0.9339623, g: 0.8965061, b: 0.64760596, a: 1}

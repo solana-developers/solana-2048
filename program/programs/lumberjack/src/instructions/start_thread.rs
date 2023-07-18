@@ -1,6 +1,4 @@
 //! Instruction: InitializeThread
-use crate::state::*;
-use crate::PlayerData;
 use crate::{ID, THREAD_AUTHORITY_SEED};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::{
@@ -9,30 +7,35 @@ use anchor_lang::solana_program::{
 use anchor_lang::InstructionData;
 use clockwork_sdk::state::Thread;
 
+use super::push_in_direction::Highscore;
+use super::Pricepool;
+
 pub fn start_thread(ctx: Context<StartThread>, thread_id: Vec<u8>) -> Result<()> {
     let system_program = &ctx.accounts.system_program;
     let clockwork_program = &ctx.accounts.clockwork_program;
     let payer = &ctx.accounts.payer;
     let thread = &ctx.accounts.thread;
     let thread_authority = &ctx.accounts.thread_authority;
-    let game_data = &mut ctx.accounts.game_data_account;
+    let highscore = &mut ctx.accounts.highscore;
 
     // 1️⃣ Prepare an instruction to automate.
     //    In this case, we will automate the ThreadTick instruction.
     let target_ix = Instruction {
         program_id: ID,
         accounts: crate::__client_accounts_thread_tick::ThreadTick {
-            game_data: game_data.key(),
+            highscore: highscore.key(),
             thread: thread.key(),
             thread_authority: thread_authority.key(),
+            price_pool: ctx.accounts.price_pool.key(),
+            system_program: system_program.key(),
         }
         .to_account_metas(Some(true)),
-        data: crate::instruction::ResetWeeklyHighscore {}.data(),
+        data: crate::instruction::ResetAndDistribute {}.data(),
     };
 
     // 2️⃣ Define a trigger for the thread.
     let trigger = clockwork_sdk::state::Trigger::Cron {
-        schedule: format!("*/{} * * * * * *", 2).into(),
+        schedule: format!("*/{} * * * * * *", 60).into(),
         skippable: true,
     };
 
@@ -49,7 +52,7 @@ pub fn start_thread(ctx: Context<StartThread>, thread_id: Vec<u8>) -> Result<()>
             },
             &[&[THREAD_AUTHORITY_SEED, &[bump]]],
         ),
-        LAMPORTS_PER_SOL * 2, // amount of sol for the thread which pays the transaction fees
+        LAMPORTS_PER_SOL / 2, // amount of sol for the thread which pays the transaction fees
         thread_id,            // id
         vec![target_ix.into()], // instructions
         trigger,              // trigger
@@ -61,9 +64,16 @@ pub fn start_thread(ctx: Context<StartThread>, thread_id: Vec<u8>) -> Result<()>
 #[derive(Accounts)]
 #[instruction(thread_id: Vec<u8>)]
 pub struct StartThread<'info> {
-    #[account(mut)]
-    pub game_data_account: Account<'info, PlayerData>,
-
+    #[account( 
+        seeds = [b"highscore_list_v2".as_ref()],
+        bump,
+    )]
+    pub highscore: Account<'info, Highscore>,
+    #[account( 
+        seeds = [b"price_pool".as_ref()],
+        bump,
+    )]
+    pub price_pool: Account<'info, Pricepool>,
     /// The Clockwork thread program.
     #[account(address = clockwork_sdk::ID)]
     pub clockwork_program: Program<'info, clockwork_sdk::ThreadProgram>,
@@ -88,7 +98,9 @@ pub struct StartThread<'info> {
 #[derive(Accounts)]
 pub struct ThreadTick<'info> {
     #[account(mut)]
-    pub game_data: Account<'info, PlayerData>,
+    pub highscore: Account<'info, Highscore>,
+    #[account(mut)]
+    pub price_pool: Account<'info, Pricepool>,
 
     /// Verify that only this thread can execute the ThreadTick Instruction
     #[account(signer, constraint = thread.authority.eq(&thread_authority.key()))]
@@ -99,4 +111,5 @@ pub struct ThreadTick<'info> {
     /// `thread_authority` should equal `thread.thread_authority`
     #[account(seeds = [THREAD_AUTHORITY_SEED], bump)]
     pub thread_authority: SystemAccount<'info>,
+    pub system_program: Program<'info, System>,
 }

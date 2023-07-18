@@ -16,6 +16,6 @@ MonoBehaviour:
   Prefab: {fileID: 0}
   MergeFx: {fileID: 1027697777517218, guid: 628d050c815a3a3448ce1dcdf0578f21, type: 3}
   Material: {fileID: 2100000, guid: 94a9ed7f2ecbf4f18bc893d657a4a579, type: 2}
-  ShakeStrength: 0.05
+  ShakeStrength: 0.02
   MaterialColor: {r: 0.1254902, g: 0.07450981, b: 0.11372549, a: 1}
   BackgroundMaterial: {fileID: 2100000, guid: e6b2860fabe7f427595239da4f53fbc9, type: 2}

@@ -1,6 +1,6 @@
 using System.Collections;
 using Frictionless;
-using Lumberjack.Accounts;
+using SolanaTwentyfourtyeight.Accounts;
 using Solana.Unity.SDK;
 using Solana.Unity.Wallet.Bip39;
 using SolPlay.Scripts.Services;
@@ -12,7 +12,8 @@ using UnityEngine.UI;
 public class Solana2048Screen : MonoBehaviour
 {
     public Button LoginButton;
-    public Button LoginWalletAdapterButton;
+    public Button LoginWalletAdapterDevnetButton;
+    public Button LoginWalletAdapterMainNetButton;
     public Button ResetButton;
     public Button TestButton;
     
@@ -29,14 +30,19 @@ public class Solana2048Screen : MonoBehaviour
     public GameObject NotInitializedRoot;
     public GameObject InitializedRoot;
     public GameObject NotLoggedInRoot;
+
+    public string DevnetRpc = "";
+    public string MainnetRpc = "";
+    public string EditortRpc = "";
     
     void Start()
     {
         LoggedInRoot.SetActive(false);
         NotLoggedInRoot.SetActive(true);
         
-        LoginButton.onClick.AddListener(OnLoginClicked);
-        LoginWalletAdapterButton.onClick.AddListener(OnLoginWalletAdapterButtonClicked);
+        LoginButton.onClick.AddListener(OnEditorLoginClicked);
+        LoginWalletAdapterDevnetButton.onClick.AddListener(OnLoginWalletAdapterButtonClicked);
+        LoginWalletAdapterMainNetButton.onClick.AddListener(OnLoginWalletAdapterMainnetButtonClicked);
         RevokeSessionButton.onClick.AddListener(OnRevokeSessionButtonClicked);
         NftsButton.onClick.AddListener(OnNftsButtonClicked);
         HighscoreButton.onClick.AddListener(OnHighscoreButtonClicked);
@@ -89,9 +95,34 @@ public class Solana2048Screen : MonoBehaviour
 
     private async void OnLoginWalletAdapterButtonClicked()
     {
+        Web3.Instance.rpcCluster = RpcCluster.DevNet;
+        Web3.Instance.customRpc = DevnetRpc;
+        Web3.Instance.webSocketsRpc = DevnetRpc.Replace("https://", "wss://");
         await Web3.Instance.LoginWalletAdapter();
     }
 
+    private async void OnLoginWalletAdapterMainnetButtonClicked()
+    {
+        Web3.Instance.rpcCluster = RpcCluster.MainNet;
+        Web3.Instance.customRpc = MainnetRpc;
+        Web3.Instance.webSocketsRpc = MainnetRpc.Replace("https://", "wss://");
+
+        await Web3.Instance.LoginWalletAdapter();
+    }
+
+    private async void OnEditorLoginClicked()
+    {
+        Web3.Instance.rpcCluster = RpcCluster.DevNet;
+        Web3.Instance.customRpc = EditortRpc;
+        Web3.Instance.webSocketsRpc = EditortRpc.Replace("https://", "wss://");
+
+        var newMnemonic = new Mnemonic(WordList.English, WordCount.Twelve);
+
+        // Dont use this one for production.
+        var account = await Web3.Instance.LoginInGameWallet("1234") ??
+                      await Web3.Instance.CreateAccount(newMnemonic.ToString(), "1234");
+    }
+    
     private IEnumerator UpdateNextEnergy()
     {
         while (true)
@@ -124,12 +155,4 @@ public class Solana2048Screen : MonoBehaviour
         ScoreText.text = Solana2048Service.Instance.CurrentPlayerData.Score.ToString();
     }
 
-    private async void OnLoginClicked()
-    {
-        var newMnemonic = new Mnemonic(WordList.English, WordCount.Twelve);
-
-        // Dont use this one for production.
-        var account = await Web3.Instance.LoginInGameWallet("1234") ??
-                      await Web3.Instance.CreateAccount(newMnemonic.ToString(), "1234");
-    }
 }
