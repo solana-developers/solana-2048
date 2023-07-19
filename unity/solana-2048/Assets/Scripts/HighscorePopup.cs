@@ -92,10 +92,12 @@ namespace SolPlay.Scripts.Ui
             IOrderedEnumerable<HighscoreEntry> sortedScores;
                 sortedScores = weekly ?  currentHighscore.Weekly.OrderByDescending(score=>score.Score) :  currentHighscore.Global.OrderByDescending(score=>score.Score);
 
+            int count = 0;
             foreach (var highscoreEntry in sortedScores)
             {
                 var highscoreEntryInstance = Instantiate(HighscoreListEntry, HighscoreListEntryRoot.transform);
-                highscoreEntryInstance.SetData(highscoreEntry);
+                highscoreEntryInstance.SetData(highscoreEntry, count);
+                count++;
             }
         }
     }

@@ -19,11 +19,22 @@ namespace SolPlay.Scripts.Ui
         public TextMeshProUGUI NftName;
         public Image FallbackImage;
 
-        public async void SetData(HighscoreEntry highscoreEntry)
+        public Sprite[] TrophieSprites;
+        public Image TrophieImage;
+        public Image SelectedBorder;
+
+        public async void SetData(HighscoreEntry highscoreEntry, int count)
         {
             HighscoreText.text = highscoreEntry.Score.ToString();
             WalletAddress.text = highscoreEntry.Nft;
 
+            if (SelectedBorder != null)
+            {
+                SelectedBorder.gameObject.SetActive(highscoreEntry.Player == Web3.Account.PublicKey);
+                TrophieImage.gameObject.SetActive(count < 3);
+                TrophieImage.sprite = TrophieSprites[count];
+            }
+            
             Nft nft = null;
             try
             {
