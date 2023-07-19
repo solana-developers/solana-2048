@@ -779,6 +779,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 43878e40ae1f9464bb9a736423b429de, type: 3}
   TrophieImage: {fileID: 8073815375937135829}
   SelectedBorder: {fileID: 2000069901150658336}
+  SolReward: {fileID: 6771853026809813177}
 --- !u!114 &4409643818330349602
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1022,7 +1023,7 @@ GameObject:
   - component: {fileID: 8948551059143998124}
   - component: {fileID: 6771853026809813177}
   m_Layer: 5
-  m_Name: ScoreNumber (1)
+  m_Name: SolRreward
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

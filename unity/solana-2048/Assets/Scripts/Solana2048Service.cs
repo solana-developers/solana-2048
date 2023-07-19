@@ -37,7 +37,7 @@ using UnityEngine;
         private SessionWallet sessionWallet;
         private PublicKey PlayerDataPDA;
         private PublicKey HighscorePDA;
-        private PublicKey PricePoolPDA;
+        public PublicKey PricePoolPDA;
         private bool _isInitialized;
         public SolanaTwentyfourtyeightClient solana_2048_client;
         private int blockBump;
