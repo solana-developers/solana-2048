@@ -1,4 +1,5 @@
 using System.Linq;
+using Solana.Unity.SDK;
 using SolanaTwentyfourtyeight.Accounts;
 using SolanaTwentyfourtyeight.Types;
 using SolPlay.Scripts.Services;
@@ -25,6 +26,7 @@ namespace SolPlay.Scripts.Ui
 
         private Highscore currentHighscore;
         private bool weekly = true;
+        private double currentPricePool;
         
         private void Awake()
         {
@@ -68,9 +70,11 @@ namespace SolPlay.Scripts.Ui
             base.Close();
         }
 
-        private void OnHighscoreChanged(Highscore highscore)
+        private async void OnHighscoreChanged(Highscore highscore)
         {
             currentHighscore = highscore;
+
+            currentPricePool = await Web3.Wallet.GetBalance(Solana2048Service.Instance.PricePoolPDA);
             
             LoadingSpinner.gameObject.SetActive(false);
 
@@ -96,7 +100,7 @@ namespace SolPlay.Scripts.Ui
             foreach (var highscoreEntry in sortedScores)
             {
                 var highscoreEntryInstance = Instantiate(HighscoreListEntry, HighscoreListEntryRoot.transform);
-                highscoreEntryInstance.SetData(highscoreEntry, count);
+                highscoreEntryInstance.SetData(highscoreEntry, count, currentPricePool);
                 count++;
             }
         }

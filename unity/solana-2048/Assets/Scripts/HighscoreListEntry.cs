@@ -22,8 +22,9 @@ namespace SolPlay.Scripts.Ui
         public Sprite[] TrophieSprites;
         public Image TrophieImage;
         public Image SelectedBorder;
+        public TextMeshProUGUI SolReward;
 
-        public async void SetData(HighscoreEntry highscoreEntry, int count)
+        public async void SetData(HighscoreEntry highscoreEntry, int count, double jackpotLamports)
         {
             HighscoreText.text = highscoreEntry.Score.ToString();
             WalletAddress.text = highscoreEntry.Nft;
@@ -34,6 +35,9 @@ namespace SolPlay.Scripts.Ui
                 TrophieImage.gameObject.SetActive(count < 3);
                 TrophieImage.sprite = TrophieSprites[count];
             }
+
+            SolReward.gameObject.SetActive(count < 3);
+            SolReward.text = (jackpotLamports / 3).ToString("F3") + " sol";
             
             Nft nft = null;
             try
