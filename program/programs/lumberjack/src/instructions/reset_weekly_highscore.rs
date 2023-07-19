@@ -24,7 +24,7 @@ pub fn reset_weekly_highscore(ctx: Context<ResetWeeklyHighscore>) -> Result<()> 
         amount_of_accounts += 1;
     }
 
-    if lamports > 10000000 {
+    if lamports > 10000000 && amount_of_accounts > 0 {
         let available_for_distribution = (lamports - 10000000) / amount_of_accounts;
 
         match &ctx.accounts.place_1 {
@@ -102,13 +102,12 @@ pub struct ResetWeeklyHighscore <'info> {
     pub price_pool: Account<'info, Pricepool>,
     pub system_program: Program<'info, System>,
     /// Address to assign to the newly created thread.
-    #[account(mut, address = Thread::pubkey(thread_authority.key(), thread_id))]
-    pub thread: SystemAccount<'info>,
+    #[account(signer, constraint = thread.authority.eq(&thread_authority.key()))]
+    pub thread: Account<'info, Thread>,
 
     /// The pda that will own and manage the thread.
     #[account(seeds = [THREAD_AUTHORITY_SEED], bump)]
-    pub thread_authority: SystemAccount<'info>,
-    
+    pub thread_authority: SystemAccount<'info>,            
 }
 
 #[account]

@@ -11,7 +11,7 @@ import {
   setProvider,
 } from "@project-serum/anchor"
 
-const threadId = "weekly_highscore";
+const threadId = "weekly_highscore_v2";
 
 describe("solana-2048", () => {
   const provider = anchor.AnchorProvider.env();
@@ -28,8 +28,8 @@ describe("solana-2048", () => {
   console.log("program", program);
   it("Start Thread!", async () => {
     console.log("Starting thread");
-    await StartThread();
     //await ResetThread();
+    await StartThread();    
   });
 
   async function StartThread() {

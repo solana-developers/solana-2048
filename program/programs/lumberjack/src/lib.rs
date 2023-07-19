@@ -33,11 +33,16 @@ pub mod solana_twentyfourtyeight {
         instructions::init_player(ctx)
     }
 
-    pub fn reset_weekly_highscore(ctx: Context<ResetWeeklyHighscore>) -> Result<()> {
+    pub fn reset_weekly_highscore(
+        ctx: Context<ResetWeeklyHighscore>,
+        thread_id: Vec<u8>,
+    ) -> Result<()> {
+        msg!("Reset weekly highscore called");
         instructions::reset_weekly_highscore(ctx)
     }
 
     pub fn reset_and_distribute(ctx: Context<ThreadTick>) -> Result<ThreadResponse> {
+        msg!("Reset and distribute called");
         let mut place_1_option: Option<Pubkey> = None;
         if !ctx.accounts.highscore.weekly.is_empty() {
             place_1_option = Some(ctx.accounts.highscore.weekly[0].player);
@@ -55,21 +60,29 @@ pub mod solana_twentyfourtyeight {
             program_id: ID,
             accounts: crate::accounts::ResetWeeklyHighscore {
                 highscore: ctx.accounts.highscore.key(),
-                price_pool: ctx.accounts.price_pool.key(),
                 place_1: place_1_option,
                 place_2: place_2_option,
                 place_3: place_3_option,
+                price_pool: ctx.accounts.price_pool.key(),
                 system_program: ctx.accounts.system_program.key(),
-                thread_authority: ctx.accounts.thread_authority.key(),
                 thread: ctx.accounts.thread.key(),
+                thread_authority: ctx.accounts.thread_authority.key(),
             }
             .to_account_metas(Some(true)),
-            data: crate::instruction::ResetWeeklyHighscore {}.data(),
+            data: crate::instruction::ResetWeeklyHighscore {
+                thread_id: "weekly_highscore_v2".as_bytes().to_vec(),
+            }
+            .data(),
         }
         .into();
 
         // 2️⃣ Define a trigger for the thread.
-        let trigger = clockwork_sdk::state::Trigger::Now {};
+        //let trigger = clockwork_sdk::state::Trigger::Now {};
+
+        let trigger = clockwork_sdk::state::Trigger::Cron {
+            schedule: format!("*/{} * * * * * *", 60).into(),
+            skippable: true,
+        };
 
         Ok(ThreadResponse {
             close_to: None,

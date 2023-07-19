@@ -24,9 +24,9 @@ pub fn start_thread(ctx: Context<StartThread>, thread_id: Vec<u8>) -> Result<()>
         program_id: ID,
         accounts: crate::__client_accounts_thread_tick::ThreadTick {
             highscore: highscore.key(),
+            price_pool: ctx.accounts.price_pool.key(),
             thread: thread.key(),
             thread_authority: thread_authority.key(),
-            price_pool: ctx.accounts.price_pool.key(),
             system_program: system_program.key(),
         }
         .to_account_metas(Some(true)),
