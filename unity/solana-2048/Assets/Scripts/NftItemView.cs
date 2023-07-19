@@ -11,11 +11,6 @@ using SolPlay.Scripts.Services;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using Solana.Unity.Rpc.Core.Http;
-using Solana.Unity.Rpc.Messages;
-using Solana.Unity.Rpc.Models;
-using Solana.Unity.Rpc.Types;
-using Solana.Unity.SDK;
 using Solana.Unity.Wallet;
 
 namespace SolPlay.Scripts.Ui
@@ -59,8 +54,11 @@ namespace SolPlay.Scripts.Ui
             }
 
             var nftService = ServiceFactory.Resolve<NftService>();
-            
-            SelectionGameObject.gameObject.SetActive(nftService.IsNftSelected(nft));
+
+            if (SelectionGameObject != null)
+            {
+                SelectionGameObject.gameObject.SetActive(nftService.IsNftSelected(nft));
+            }
             
             if (nft.metaplexData.data.offchainData != null)
             {
