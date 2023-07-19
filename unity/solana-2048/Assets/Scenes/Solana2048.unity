@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.4445827, g: 0.49408823, b: 0.5733585, a: 1}
+  m_IndirectSpecularColor: {r: 0.44458336, g: 0.49408978, b: 0.57335985, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -4359,6 +4359,26 @@ PrefabInstance:
     - target: {fileID: 7768150992220359611, guid: 932385457eb6e48999e46c08f0039d6c, type: 3}
       propertyPath: m_Name
       value: SolBalanceWidget
+      objectReference: {fileID: 0}
+    - target: {fileID: 7768150993078504032, guid: 932385457eb6e48999e46c08f0039d6c, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 96c226a2cd49a4d4abd54a7223a76a56, type: 3}
+    - target: {fileID: 7768150993078504033, guid: 932385457eb6e48999e46c08f0039d6c, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 57.444
+      objectReference: {fileID: 0}
+    - target: {fileID: 7768150993078504033, guid: 932385457eb6e48999e46c08f0039d6c, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: -32.046
+      objectReference: {fileID: 0}
+    - target: {fileID: 7768150993078504033, guid: 932385457eb6e48999e46c08f0039d6c, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -21.778
+      objectReference: {fileID: 0}
+    - target: {fileID: 7768150993078504033, guid: 932385457eb6e48999e46c08f0039d6c, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 932385457eb6e48999e46c08f0039d6c, type: 3}
