@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DefaultNamespace;
 using Frictionless;
 using SolanaTwentyfourtyeight.Accounts;
+using SolPlay.Scripts.Ui;
 using UnityEngine;
 
 public class BoardManager : MonoBehaviour
@@ -16,6 +17,7 @@ public class BoardManager : MonoBehaviour
     public List<Tile> tiles = new List<Tile>();
     public TileConfig[] tileConfigs;
     public GameObject GameOverText;
+    public TextBlimp3D BlimpPrefab;
 
     public bool IsWaiting;
     public DateTime? SocketMessageTimeout = null;
@@ -315,6 +317,10 @@ public class BoardManager : MonoBehaviour
             int index = Mathf.Clamp(IndexOf(b.currentConfig) + 1, 0, tileConfigs.Length - 1);
             TileConfig newState = tileConfigs[index];
 
+            var blimp = Instantiate(BlimpPrefab);
+            blimp.SetData("+ " + newState.Number);
+            blimp.transform.position = b.Cell.transform.position;
+            
             b.Init(newState);
         });
 

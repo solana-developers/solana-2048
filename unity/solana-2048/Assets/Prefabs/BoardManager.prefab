@@ -68,9 +68,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 10456276a711c4b73b1f41c194267470, type: 2}
   - {fileID: 11400000, guid: 90710be51d0d74455baccc1f43cfaaf9, type: 2}
   GameOverText: {fileID: 6393324520305052991}
+  BlimpPrefab: {fileID: 1240491598403943179, guid: d344c11aa41bd4a6091876a4e889da0e, type: 3}
   IsWaiting: 0
   BackgroundMeshRenderer: {fileID: 807115644214668570}
   TouchInputHandler: {fileID: 1911136921}
+  DirectionIndicator: {fileID: 0}
+  Asset: {fileID: 0}
 --- !u!114 &1911136921
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -83,6 +86,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bdfb6935797f24c30881d8aad9a6bbec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  minSwipeDist: 30
+  maxSwipeTime: 0.5
 --- !u!1 &807115644214668568
 GameObject:
   m_ObjectHideFlags: 0
