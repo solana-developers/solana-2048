@@ -33,11 +33,11 @@ In the Solana version of it every transaction is an on chain transaction and it 
 gum session keys, so signing every transaction is not needed.
 
 ## Game state is saved on any NFT 
-Furthermore the game state is bound to an NFT ming if the player selects an NFT. 
+Furthermore the game state is bound to an NFT mint if the player selects an NFT. 
 So the game state can actually be send to another player by sending the NFT to him.
 
 ## Weekly highscore
-With every new game a tiny amount of lamports is send to the program. This is then payed out to the player with the highest score at the end of the week. (This is supposed to happen with a clockwork thread, but currently its manual because I cant figure out how to make it work together with session keys. If you can figure it out please let me know.)
+With every new game a tiny amount of lamports is send to the programs jackpot treasury. This is then payed out to the player with the highest score at the end of each week by a clockwork thread automatically.
 
 ## Client
 The client is written in the game engine Unity and is using the Solana Unity SDK to interact with the Solana blockchain.

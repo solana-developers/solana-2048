@@ -35,10 +35,15 @@ pub fn start_thread(ctx: Context<StartThread>, thread_id: Vec<u8>) -> Result<()>
 
     // 2️⃣ Define a trigger for the thread.
     let trigger = clockwork_sdk::state::Trigger::Cron {
-        schedule: format!("*/{} * * * * * *", 60).into(),
+        schedule: "0 0 1 * * SUN".into(),
         skippable: true,
     };
-
+    // For testing run it every minute
+    //let trigger = clockwork_sdk::state::Trigger::Cron {
+    //    schedule: "*/60 * * * * *".into(),
+    //    skippable: true,
+    //};
+    
     // 3️⃣ Create a Thread via CPI
     let bump = *ctx.bumps.get("thread_authority").unwrap();
     clockwork_sdk::cpi::thread_create(

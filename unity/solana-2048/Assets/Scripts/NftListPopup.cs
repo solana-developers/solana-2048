@@ -112,7 +112,7 @@ namespace SolPlay.Scripts.Ui
         private bool UpdateOwnCollectionStatus()
         {
             var nftService = ServiceFactory.Resolve<NftService>();
-            bool ownsBeaver = nftService.OwnsNftOfMintAuthority(NftService.BeaverNftMintAuthority);
+            bool ownsBeaver = nftService.OwnsNftOfMintAuthority(NftService.NftMintAuthority);
             YouDontOwnANftOfCollectionRoot.gameObject.SetActive(!ownsBeaver);
             YouOwnANftOfCollectionRoot.gameObject.SetActive(ownsBeaver);
             return ownsBeaver;

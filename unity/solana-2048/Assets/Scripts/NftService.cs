@@ -20,7 +20,7 @@ namespace SolPlay.Scripts.Services
     {
         public List<Nft> LoadedNfts = new ();
         public bool IsLoadingTokenAccounts { get; private set; }
-        public const string BeaverNftMintAuthority = "GsfNSuZFrT2r4xzSndnCSs9tTXwt47etPqU8yFVnDcXd";
+        public const string NftMintAuthority = "GsfNSuZFrT2r4xzSndnCSs9tTXwt47etPqU8yFVnDcXd";
         public Nft SelectedNft { get; private set; }
         public Texture2D LocalDummyNft;
         public bool LoadNftsOnStartUp = true;
@@ -52,7 +52,7 @@ namespace SolPlay.Scripts.Services
         public void LoadNfts()
         {
             LoadedNfts.Clear();
-            Web3.LoadNFTs(true, true, 300);
+            Web3.LoadNFTs(true, true, 500);
             IsLoadingTokenAccounts = true;
             Web3.OnNFTsUpdate += (nfts, totalAmount) =>
             {

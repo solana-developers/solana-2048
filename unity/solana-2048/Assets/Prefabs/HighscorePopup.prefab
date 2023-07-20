@@ -560,7 +560,7 @@ RectTransform:
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -813,7 +813,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2239180373873687304
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1056,7 +1056,7 @@ MonoBehaviour:
   GlobalButtonCanvasGroup: {fileID: 858751891452782392}
   GlobalArrow: {fileID: 5594260825635893346}
   WeeklyArrow: {fileID: 6664326356577943095}
-  ResetWeeklyHighscore: {fileID: 6051746745775124747}
+  CurrentHighscoreText: {fileID: 4220330245759579198}
 --- !u!1 &2239180373963910403
 GameObject:
   m_ObjectHideFlags: 0
@@ -1430,7 +1430,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -563, y: 344}
+  m_AnchoredPosition: {x: 0, y: 162}
   m_SizeDelta: {x: 1639.4082, y: 1187.4219}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2239180374526461278
@@ -1748,7 +1748,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Prizes are calculated every Sunday at 1 UTC
+  m_text: Prizes are sent every Sunday at 1pm UTC automatically
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2347,7 +2347,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &4392749604199914757
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2366,8 +2366,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1021.834, y: 866.975}
+  m_AnchoredPosition: {x: -3.2681, y: -15.0759}
+  m_SizeDelta: {x: 963.0094, y: 1054.2677}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &4392749604283623303
 GameObject:
@@ -3132,6 +3132,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.x
       value: -30.388367
       objectReference: {fileID: 0}
+    - target: {fileID: 7067175154011352682, guid: ab1dcc6f632d54e5797ede05722b81cb, type: 3}
+      propertyPath: m_fontSize
+      value: 18.2
+      objectReference: {fileID: 0}
     - target: {fileID: 9156621081020928724, guid: ab1dcc6f632d54e5797ede05722b81cb, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -3363,6 +3367,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7067175154011352682, guid: ab1dcc6f632d54e5797ede05722b81cb, type: 3}
+      propertyPath: m_fontSize
+      value: 18.2
+      objectReference: {fileID: 0}
     - target: {fileID: 9156621081020928724, guid: ab1dcc6f632d54e5797ede05722b81cb, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -3581,14 +3589,3 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
---- !u!114 &6051746745775124747 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4543230662569328023, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
-  m_PrefabInstance: {fileID: 7850006892160355484}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6051746745775124745}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 

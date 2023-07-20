@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44458336, g: 0.49408978, b: 0.57335985, a: 1}
+  m_IndirectSpecularColor: {r: 0.4445827, g: 0.49408823, b: 0.5733585, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1194,9 +1194,9 @@ MonoBehaviour:
   NotInitializedRoot: {fileID: 1648474100}
   InitializedRoot: {fileID: 895286101}
   NotLoggedInRoot: {fileID: 772684576}
-  DevnetRpc: https://devnet.helius-rpc.com/?api-key=dcee9dad-fb42-4a26-b394-41b53e81d913
+  DevnetRpc: https://broken-empty-reel.solana-devnet.quiknode.pro/333a00f389fe630f4d331dd740b3aa6b040f8598/
   MainnetRpc: https://rpc.helius.xyz/?api-key=dcee9dad-fb42-4a26-b394-41b53e81d913
-  EditortRpc: https://devnet.helius-rpc.com/?api-key=dcee9dad-fb42-4a26-b394-41b53e81d913
+  EditortRpc: https://broken-empty-reel.solana-devnet.quiknode.pro/333a00f389fe630f4d331dd740b3aa6b040f8598/
 --- !u!114 &367469666 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4543230662569328023, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
@@ -1588,6 +1588,10 @@ PrefabInstance:
     - target: {fileID: 4543230662569328021, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
       propertyPath: m_Name
       value: LoginDevnetBtn
+      objectReference: {fileID: 0}
+    - target: {fileID: 4543230662569328021, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4543230662569328022, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
       propertyPath: m_Color.a
@@ -2144,7 +2148,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &772684577
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4338,11 +4342,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7768150992220359610, guid: 932385457eb6e48999e46c08f0039d6c, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -242.65814
+      value: -242.6582
       objectReference: {fileID: 0}
     - target: {fileID: 7768150992220359610, guid: 932385457eb6e48999e46c08f0039d6c, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -61.6
+      value: -61.600098
       objectReference: {fileID: 0}
     - target: {fileID: 7768150992220359610, guid: 932385457eb6e48999e46c08f0039d6c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -4490,6 +4494,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: LoginWalletAdatperDevnetBtn
       objectReference: {fileID: 0}
+    - target: {fileID: 4543230662569328021, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
 --- !u!224 &3227916257409431041 stripped
@@ -4563,6 +4571,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: ScoreBlimp
       objectReference: {fileID: 0}
+    - target: {fileID: 948155532996457494, guid: d344c11aa41bd4a6091876a4e889da0e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 948155534957369731, guid: d344c11aa41bd4a6091876a4e889da0e, type: 3}
       propertyPath: m_text
       value: 2
@@ -4570,6 +4582,14 @@ PrefabInstance:
     - target: {fileID: 948155534957369731, guid: d344c11aa41bd4a6091876a4e889da0e, type: 3}
       propertyPath: m_fontSize
       value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 948155534957369731, guid: d344c11aa41bd4a6091876a4e889da0e, type: 3}
+      propertyPath: m_fontColor.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 948155534957369731, guid: d344c11aa41bd4a6091876a4e889da0e, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 3758096383
       objectReference: {fileID: 0}
     - target: {fileID: 6511902506747641434, guid: d344c11aa41bd4a6091876a4e889da0e, type: 3}
       propertyPath: m_LocalRotation.w

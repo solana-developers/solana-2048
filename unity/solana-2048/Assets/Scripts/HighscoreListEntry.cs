@@ -23,21 +23,22 @@ namespace SolPlay.Scripts.Ui
         public Image TrophieImage;
         public Image SelectedBorder;
         public TextMeshProUGUI SolReward;
+        public GameObject SolRewardRoot;
 
         public async void SetData(HighscoreEntry highscoreEntry, int count, double jackpotLamports)
         {
             HighscoreText.text = highscoreEntry.Score.ToString();
-            WalletAddress.text = highscoreEntry.Nft;
+            WalletAddress.text = highscoreEntry.Player;
 
-            if (SelectedBorder != null)
+            if (count < 3)
             {
-                SelectedBorder.gameObject.SetActive(highscoreEntry.Player == Web3.Account.PublicKey);
-                TrophieImage.gameObject.SetActive(count < 3);
                 TrophieImage.sprite = TrophieSprites[count];
             }
-
-            SolReward.gameObject.SetActive(count < 3);
-            SolReward.text = (jackpotLamports / 3).ToString("F3") + " sol";
+            
+            SelectedBorder.gameObject.SetActive(highscoreEntry.Player == Web3.Account.PublicKey);
+            TrophieImage.gameObject.SetActive(count < 3);
+            SolRewardRoot.gameObject.SetActive(count < 3);
+            SolReward.text = (jackpotLamports / 3).ToString("F3");
             
             Nft nft = null;
             try

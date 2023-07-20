@@ -19,7 +19,12 @@ pub enum GameErrorCode {
 
 /// Seed for thread_authority PDA.
 pub const THREAD_AUTHORITY_SEED: &[u8] = b"authority";
-pub const GAME_ENTRY: u64 = LAMPORTS_PER_SOL / 1000; // 0.001 SOL
+
+// Total fee to start a game will be 0.001 sol
+// The game dev wallet can be configured in the client.
+// So everyone running a client can earn some sol.
+pub const JACKPOT_ENTRY: u64 = (LAMPORTS_PER_SOL / 10000) * 6; // 0.0006 SOL
+pub const GAME_DEV_FEE: u64 = (LAMPORTS_PER_SOL / 10000) * 4; // 0.0004 SOL
 
 #[program]
 pub mod solana_twentyfourtyeight {
@@ -77,17 +82,17 @@ pub mod solana_twentyfourtyeight {
         .into();
 
         // 2️⃣ Define a trigger for the thread.
-        //let trigger = clockwork_sdk::state::Trigger::Now {};
+        let trigger = clockwork_sdk::state::Trigger::Now {};
 
-        let trigger = clockwork_sdk::state::Trigger::Cron {
-            schedule: format!("*/{} * * * * * *", 60).into(),
-            skippable: true,
-        };
+        //let trigger = clockwork_sdk::state::Trigger::Cron {
+        //    schedule: format!("*/{} * * * * * *", 60).into(),
+        //    skippable: true,
+        //};
 
         Ok(ThreadResponse {
             close_to: None,
             dynamic_instruction: Some(target_ix),
-            trigger: Some(trigger),
+            trigger: None,
         })
     }
 

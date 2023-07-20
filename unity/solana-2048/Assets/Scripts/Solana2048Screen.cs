@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Frictionless;
 using SolanaTwentyfourtyeight.Accounts;
@@ -6,6 +7,7 @@ using Solana.Unity.Wallet.Bip39;
 using SolPlay.Scripts.Services;
 using SolPlay.Scripts.Ui;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -34,6 +36,8 @@ public class Solana2048Screen : MonoBehaviour
     public string DevnetRpc = "";
     public string MainnetRpc = "";
     public string EditortRpc = "";
+    private uint targetScore;
+    private uint currentScore;
     
     void Start()
     {
@@ -41,6 +45,7 @@ public class Solana2048Screen : MonoBehaviour
         NotLoggedInRoot.SetActive(true);
         
         LoginButton.onClick.AddListener(OnEditorLoginClicked);
+        LoginButton.gameObject.SetActive(Application.isEditor);
         LoginWalletAdapterDevnetButton.onClick.AddListener(OnLoginWalletAdapterButtonClicked);
         LoginWalletAdapterMainNetButton.onClick.AddListener(OnLoginWalletAdapterMainnetButtonClicked);
         RevokeSessionButton.onClick.AddListener(OnRevokeSessionButtonClicked);
@@ -65,6 +70,11 @@ public class Solana2048Screen : MonoBehaviour
     {
         LoadingSpinner.gameObject.SetActive(Solana2048Service.Instance.IsAnyTransactionInProgress);
         InitGameDataButton.interactable = !Solana2048Service.Instance.IsAnyTransactionInProgress;
+        if (targetScore != currentScore)
+        {
+            currentScore = (uint) Mathf.Lerp(currentScore, targetScore, Time.deltaTime);
+            ScoreText.text = currentScore.ToString();
+        }
     }
 
     private async void OnInitGameDataButtonClicked()
@@ -151,8 +161,8 @@ public class Solana2048Screen : MonoBehaviour
         {
             return;
         }
-
-        ScoreText.text = Solana2048Service.Instance.CurrentPlayerData.Score.ToString();
+    
+        targetScore = Solana2048Service.Instance.CurrentPlayerData.Score;
     }
 
 }

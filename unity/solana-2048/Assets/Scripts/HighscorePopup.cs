@@ -3,6 +3,7 @@ using Solana.Unity.SDK;
 using SolanaTwentyfourtyeight.Accounts;
 using SolanaTwentyfourtyeight.Types;
 using SolPlay.Scripts.Services;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,8 +23,8 @@ namespace SolPlay.Scripts.Ui
         public CanvasGroup GlobalButtonCanvasGroup;
         public GameObject GlobalArrow;
         public GameObject WeeklyArrow;
-        public Button ResetWeeklyHighscore;
-
+        public TextMeshProUGUI CurrentHighscoreText;
+        
         private Highscore currentHighscore;
         private bool weekly = true;
         private double currentPricePool;
@@ -32,7 +33,6 @@ namespace SolPlay.Scripts.Ui
         {
             WeeklyButton.onClick.AddListener(OnWeeklyButtonClicked);
             GlobalButton.onClick.AddListener(OnGlobalButtonClicked);
-            ResetWeeklyHighscore.onClick.AddListener(OnResetWeeklyHighscoreClicked);
             GlobalButtonCanvasGroup.alpha = 0.5f;
             WeeklyButtonCanvasGroup.alpha = 1f;
             GlobalArrow.gameObject.SetActive(false);
@@ -51,11 +51,6 @@ namespace SolPlay.Scripts.Ui
             UpdateContent();
         }
 
-        private void OnResetWeeklyHighscoreClicked()
-        {
-            Solana2048Service.Instance.ResetWeeklyHighscore();
-        }
-        
         public override void Open(UiService.UiData uiData)
         {
             Solana2048Service.Instance.RequestHighscore();
@@ -75,7 +70,7 @@ namespace SolPlay.Scripts.Ui
             currentHighscore = highscore;
 
             currentPricePool = await Web3.Wallet.GetBalance(Solana2048Service.Instance.PricePoolPDA);
-            
+            CurrentHighscoreText.text = currentPricePool.ToString("F3");
             LoadingSpinner.gameObject.SetActive(false);
 
             UpdateContent();

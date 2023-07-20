@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using DefaultNamespace;
 using Frictionless;
@@ -317,15 +318,28 @@ public class BoardManager : MonoBehaviour
             int index = Mathf.Clamp(IndexOf(b.currentConfig) + 1, 0, tileConfigs.Length - 1);
             TileConfig newState = tileConfigs[index];
 
-            var blimp = Instantiate(BlimpPrefab);
-            blimp.SetData("+ " + newState.Number);
-            blimp.transform.position = b.Cell.transform.position;
-            
-            b.Init(newState);
+            if (b != null)
+            {
+                var blimp = Instantiate(BlimpPrefab);
+                blimp.SetData(newState.Number.ToString());
+                blimp.transform.position = b.Cell.transform.position;
+                StartCoroutine(DestroyAfterSeconds(blimp));
+                b.Init(newState);
+            }
+            else
+            {
+                Debug.Log("Tile was destroyed during move.");
+            }
         });
 
         // TODO: Animate score
         //gameManager.IncreaseScore(newState.number);
+    }
+
+    private IEnumerator DestroyAfterSeconds(TextBlimp3D blimp)
+    {
+        yield return new WaitForSeconds(2);
+        Destroy(blimp.gameObject);
     }
 
     private int IndexOf(TileConfig state)

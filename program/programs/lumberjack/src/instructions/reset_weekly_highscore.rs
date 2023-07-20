@@ -24,8 +24,8 @@ pub fn reset_weekly_highscore(ctx: Context<ResetWeeklyHighscore>) -> Result<()> 
         amount_of_accounts += 1;
     }
 
-    if lamports > 10000000 && amount_of_accounts > 0 {
-        let available_for_distribution = (lamports - 10000000) / amount_of_accounts;
+    if lamports > 2000000 && amount_of_accounts > 0 {
+        let available_for_distribution = (lamports - 2000000) / amount_of_accounts;
 
         match &ctx.accounts.place_1 {
             Some(place_1) => {

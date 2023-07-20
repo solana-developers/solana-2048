@@ -1,10 +1,11 @@
 //! Instruction: Push in direction
+use crate::GAME_DEV_FEE;
 use crate::state::*;
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
 use crate::Highscore;
 pub use crate::errors::Solana2048Error;
-use crate::GAME_ENTRY;
+use crate::JACKPOT_ENTRY;
 
 use super::Pricepool;
 
@@ -21,7 +22,16 @@ pub fn init_player(mut ctx: Context<InitPlayer>) -> Result<()> {
             to: ctx.accounts.price_pool.to_account_info().clone(),
         },
     );
-    system_program::transfer(cpi_context, GAME_ENTRY)?;
+    system_program::transfer(cpi_context, JACKPOT_ENTRY)?;
+
+    let cpi_context = CpiContext::new(
+        ctx.accounts.system_program.to_account_info(),
+        system_program::Transfer {
+            from: ctx.accounts.signer.to_account_info().clone(),
+            to: ctx.accounts.client_dev_wallet.to_account_info().clone(),
+        },
+    );
+    system_program::transfer(cpi_context, GAME_DEV_FEE)?;
     Ok(())
 }
 
@@ -70,5 +80,8 @@ pub struct InitPlayer <'info> {
     pub signer: Signer<'info>,
     /// CHECK: Unchecked until I can get SPL and Meta data to work
     pub avatar: UncheckedAccount<'info>,
+    /// CHECK: Unchecked, can be changed to the wallet of the person running the client to earn some money
+    #[account(mut)]
+    pub client_dev_wallet: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }

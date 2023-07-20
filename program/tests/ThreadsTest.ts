@@ -28,7 +28,7 @@ describe("solana-2048", () => {
   console.log("program", program);
   it("Start Thread!", async () => {
     console.log("Starting thread");
-    //await ResetThread();
+    await ResetThread();
     await StartThread();    
   });
 

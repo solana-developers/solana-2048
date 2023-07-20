@@ -341,9 +341,15 @@ namespace SolanaTwentyfourtyeight
             return await SignAndSendTransaction(instr, feePayer, signingCallback);
         }
 
-        public async Task<RequestResult<string>> SendResetWeeklyHighscoreAsync(ResetWeeklyHighscoreAccounts accounts, PublicKey feePayer, Func<byte[], PublicKey, byte[]> signingCallback, PublicKey programId)
+        public async Task<RequestResult<string>> SendResetWeeklyHighscoreAsync(ResetWeeklyHighscoreAccounts accounts, byte[] threadId, PublicKey feePayer, Func<byte[], PublicKey, byte[]> signingCallback, PublicKey programId)
         {
-            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.SolanaTwentyfourtyeightProgram.ResetWeeklyHighscore(accounts, programId);
+            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.SolanaTwentyfourtyeightProgram.ResetWeeklyHighscore(accounts, threadId, programId);
+            return await SignAndSendTransaction(instr, feePayer, signingCallback);
+        }
+
+        public async Task<RequestResult<string>> SendResetAndDistributeAsync(ResetAndDistributeAccounts accounts, PublicKey feePayer, Func<byte[], PublicKey, byte[]> signingCallback, PublicKey programId)
+        {
+            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.SolanaTwentyfourtyeightProgram.ResetAndDistribute(accounts, programId);
             return await SignAndSendTransaction(instr, feePayer, signingCallback);
         }
 
@@ -377,6 +383,12 @@ namespace SolanaTwentyfourtyeight
             return await SignAndSendTransaction(instr, feePayer, signingCallback);
         }
 
+        public async Task<RequestResult<string>> SendResetThreadAsync(ResetThreadAccounts accounts, byte[] threadId, PublicKey feePayer, Func<byte[], PublicKey, byte[]> signingCallback, PublicKey programId)
+        {
+            Solana.Unity.Rpc.Models.TransactionInstruction instr = Program.SolanaTwentyfourtyeightProgram.ResetThread(accounts, threadId, programId);
+            return await SignAndSendTransaction(instr, feePayer, signingCallback);
+        }
+
         protected override Dictionary<uint, ProgramError<SolanaTwentyfourtyeightErrorKind>> BuildErrorsDictionary()
         {
             return new Dictionary<uint, ProgramError<SolanaTwentyfourtyeightErrorKind>>{{6000U, new ProgramError<SolanaTwentyfourtyeightErrorKind>(SolanaTwentyfourtyeightErrorKind.WrongAuthority, "Wrong Authority")}, {6001U, new ProgramError<SolanaTwentyfourtyeightErrorKind>(SolanaTwentyfourtyeightErrorKind.GameNotOverYet, "Game not over yet")}, };
@@ -397,6 +409,8 @@ namespace SolanaTwentyfourtyeight
 
             public PublicKey Avatar { get; set; }
 
+            public PublicKey ClientDevWallet { get; set; }
+
             public PublicKey SystemProgram { get; set; }
         }
 
@@ -406,9 +420,28 @@ namespace SolanaTwentyfourtyeight
 
             public PublicKey Place1 { get; set; }
 
+            public PublicKey Place2 { get; set; }
+
+            public PublicKey Place3 { get; set; }
+
             public PublicKey PricePool { get; set; }
 
-            public PublicKey Signer { get; set; }
+            public PublicKey SystemProgram { get; set; }
+
+            public PublicKey Thread { get; set; }
+
+            public PublicKey ThreadAuthority { get; set; }
+        }
+
+        public class ResetAndDistributeAccounts
+        {
+            public PublicKey Highscore { get; set; }
+
+            public PublicKey PricePool { get; set; }
+
+            public PublicKey Thread { get; set; }
+
+            public PublicKey ThreadAuthority { get; set; }
 
             public PublicKey SystemProgram { get; set; }
         }
@@ -442,12 +475,16 @@ namespace SolanaTwentyfourtyeight
 
             public PublicKey Avatar { get; set; }
 
+            public PublicKey ClientDevWallet { get; set; }
+
             public PublicKey SystemProgram { get; set; }
         }
 
         public class StartThreadAccounts
         {
-            public PublicKey GameDataAccount { get; set; }
+            public PublicKey Highscore { get; set; }
+
+            public PublicKey PricePool { get; set; }
 
             public PublicKey ClockworkProgram { get; set; }
 
@@ -482,12 +519,23 @@ namespace SolanaTwentyfourtyeight
             public PublicKey ThreadAuthority { get; set; }
         }
 
+        public class ResetThreadAccounts
+        {
+            public PublicKey Payer { get; set; }
+
+            public PublicKey ClockworkProgram { get; set; }
+
+            public PublicKey Thread { get; set; }
+
+            public PublicKey ThreadAuthority { get; set; }
+        }
+
         public static class SolanaTwentyfourtyeightProgram
         {
             public static Solana.Unity.Rpc.Models.TransactionInstruction InitPlayer(InitPlayerAccounts accounts, PublicKey programId)
             {
                 List<Solana.Unity.Rpc.Models.AccountMeta> keys = new()
-                {Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Player, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.PricePool, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Signer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.Avatar, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false)};
+                {Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Player, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.PricePool, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Signer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.Avatar, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.ClientDevWallet, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false)};
                 byte[] _data = new byte[1200];
                 int offset = 0;
                 _data.WriteU64(4819994211046333298UL, offset);
@@ -497,13 +545,30 @@ namespace SolanaTwentyfourtyeight
                 return new Solana.Unity.Rpc.Models.TransactionInstruction{Keys = keys, ProgramId = programId.KeyBytes, Data = resultData};
             }
 
-            public static Solana.Unity.Rpc.Models.TransactionInstruction ResetWeeklyHighscore(ResetWeeklyHighscoreAccounts accounts, PublicKey programId)
+            public static Solana.Unity.Rpc.Models.TransactionInstruction ResetWeeklyHighscore(ResetWeeklyHighscoreAccounts accounts, byte[] threadId, PublicKey programId)
             {
                 List<Solana.Unity.Rpc.Models.AccountMeta> keys = new()
-                {Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Place1, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.PricePool, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Signer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false)};
+                {Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Place1 == null ? programId : accounts.Place1, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Place2 == null ? programId : accounts.Place2, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Place3 == null ? programId : accounts.Place3, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.PricePool, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.Thread, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.ThreadAuthority, false)};
                 byte[] _data = new byte[1200];
                 int offset = 0;
                 _data.WriteU64(9998402410022544069UL, offset);
+                offset += 8;
+                _data.WriteS32(threadId.Length, offset);
+                offset += 4;
+                _data.WriteSpan(threadId, offset);
+                offset += threadId.Length;
+                byte[] resultData = new byte[offset];
+                Array.Copy(_data, resultData, offset);
+                return new Solana.Unity.Rpc.Models.TransactionInstruction{Keys = keys, ProgramId = programId.KeyBytes, Data = resultData};
+            }
+
+            public static Solana.Unity.Rpc.Models.TransactionInstruction ResetAndDistribute(ResetAndDistributeAccounts accounts, PublicKey programId)
+            {
+                List<Solana.Unity.Rpc.Models.AccountMeta> keys = new()
+                {Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.PricePool, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.Thread, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.ThreadAuthority, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false)};
+                byte[] _data = new byte[1200];
+                int offset = 0;
+                _data.WriteU64(9198043416659377369UL, offset);
                 offset += 8;
                 byte[] resultData = new byte[offset];
                 Array.Copy(_data, resultData, offset);
@@ -530,7 +595,7 @@ namespace SolanaTwentyfourtyeight
             public static Solana.Unity.Rpc.Models.TransactionInstruction Restart(RestartAccounts accounts, PublicKey programId)
             {
                 List<Solana.Unity.Rpc.Models.AccountMeta> keys = new()
-                {Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SessionToken == null ? programId : accounts.SessionToken, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Player, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.PricePool, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Signer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.Avatar, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false)};
+                {Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SessionToken == null ? programId : accounts.SessionToken, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Player, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.PricePool, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Signer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.Avatar, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.ClientDevWallet, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false)};
                 byte[] _data = new byte[1200];
                 int offset = 0;
                 _data.WriteU64(2919679679907439389UL, offset);
@@ -543,7 +608,7 @@ namespace SolanaTwentyfourtyeight
             public static Solana.Unity.Rpc.Models.TransactionInstruction StartThread(StartThreadAccounts accounts, byte[] threadId, PublicKey programId)
             {
                 List<Solana.Unity.Rpc.Models.AccountMeta> keys = new()
-                {Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.GameDataAccount, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.ClockworkProgram, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Payer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Thread, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.ThreadAuthority, false)};
+                {Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.Highscore, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.PricePool, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.ClockworkProgram, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Payer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.SystemProgram, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Thread, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.ThreadAuthority, false)};
                 byte[] _data = new byte[1200];
                 int offset = 0;
                 _data.WriteU64(15046500361448809729UL, offset);
@@ -581,6 +646,23 @@ namespace SolanaTwentyfourtyeight
                 byte[] _data = new byte[1200];
                 int offset = 0;
                 _data.WriteU64(5675786826980878817UL, offset);
+                offset += 8;
+                _data.WriteS32(threadId.Length, offset);
+                offset += 4;
+                _data.WriteSpan(threadId, offset);
+                offset += threadId.Length;
+                byte[] resultData = new byte[offset];
+                Array.Copy(_data, resultData, offset);
+                return new Solana.Unity.Rpc.Models.TransactionInstruction{Keys = keys, ProgramId = programId.KeyBytes, Data = resultData};
+            }
+
+            public static Solana.Unity.Rpc.Models.TransactionInstruction ResetThread(ResetThreadAccounts accounts, byte[] threadId, PublicKey programId)
+            {
+                List<Solana.Unity.Rpc.Models.AccountMeta> keys = new()
+                {Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Payer, true), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.ClockworkProgram, false), Solana.Unity.Rpc.Models.AccountMeta.Writable(accounts.Thread, false), Solana.Unity.Rpc.Models.AccountMeta.ReadOnly(accounts.ThreadAuthority, false)};
+                byte[] _data = new byte[1200];
+                int offset = 0;
+                _data.WriteU64(9796277319507992179UL, offset);
                 offset += 8;
                 _data.WriteS32(threadId.Length, offset);
                 offset += 4;
