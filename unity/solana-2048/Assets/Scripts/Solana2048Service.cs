@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Frictionless;
@@ -11,13 +12,15 @@ using SolanaTwentyfourtyeight.Accounts;
 using SolanaTwentyfourtyeight.Program;
 using Solana.Unity.Programs;
 using Solana.Unity.Programs.Models;
+using Solana.Unity.Rpc;
+using Solana.Unity.Rpc.Core.Http;
+using Solana.Unity.Rpc.Messages;
 using Solana.Unity.Rpc.Models;
 using Solana.Unity.Rpc.Types;
 using Solana.Unity.SDK;
 using Solana.Unity.Wallet;
 using SolPlay.Scripts.Services;
 using UnityEngine;
-using UnityEngine.AI;
 
 
 public class Solana2048Service : MonoBehaviour
@@ -41,6 +44,8 @@ public class Solana2048Service : MonoBehaviour
         public PublicKey PricePoolPDA;
         private bool _isInitialized;
         private bool _isSessionInitialized;
+        public bool CantLoadBlockhash;
+        public float CurrentAverageSocketResponseTime;
         public SolanaTwentyfourtyeightClient solana_2048_client;
         private int blockBump;
         private string cachedBlockHash;
@@ -93,6 +98,7 @@ public class Solana2048Service : MonoBehaviour
             }
             catch (Exception e)
             {
+                transactionsInProgress--;
                 Debug.LogWarning("Initializing player data. " + e.Message);
             }
 
@@ -157,13 +163,19 @@ public class Solana2048Service : MonoBehaviour
             sessionWallet = await SessionWallet.GetSessionWallet(Solana_2048_ProgramIdPubKey, "ingame2", 
                 RpcCluster.MainNet, Web3.Wallet.ActiveRpcClient.NodeAddress.ToString(), 
                 Web3.Wallet.ActiveStreamingRpcClient.NodeAddress.ToString());
-            if (sessionWallet != null || Web3.Wallet != null)
+
+            if (sessionWallet != null)
             {
-                Debug.Log("Session wallet pubkey: " + sessionWallet.Account.PublicKey + " address: " + Web3.Wallet.ActiveRpcClient.NodeAddress);   
+                Debug.Log("Session wallet pubkey: " + sessionWallet.Account.PublicKey);   
             }
             else
             {
-                Debug.LogError("Session wallet is not initialized properly. " + sessionWallet + Web3.Wallet);
+                Debug.LogError("Session wallet is not initialized properly. " + sessionWallet);
+            }
+
+            if (Web3.Wallet != null)
+            {
+                Debug.Log("Logged in with: " + Web3.Wallet.ActiveRpcClient.NodeAddress);
             }
             _isSessionInitialized = await IsSessionTokenInitialized();
             OnInitialDataLoaded?.Invoke();
@@ -202,10 +214,12 @@ public class Solana2048Service : MonoBehaviour
             {
                 cachedBlockHash = blockHash.Result.Value.Blockhash;
                 Debug.Log("Cached Blockhash: " + cachedBlockHash);
+                CantLoadBlockhash = false;
             }
             else
             {
-                Debug.Log("Could not get new block hash. " + blockHash.RawRpcResponse + " request: " + blockHash.RawRpcRequest);    
+                Debug.Log("Could not get new block hash. " + blockHash.RawRpcResponse + " request: " + blockHash.RawRpcRequest);
+                CantLoadBlockhash = true;
             }
         }
         
@@ -223,6 +237,7 @@ public class Solana2048Service : MonoBehaviour
             }
 
             average /= socketResponseTimes.Count;
+            CurrentAverageSocketResponseTime = average;
             Debug.Log("Current average socket response time: " + average);
         }
         
@@ -237,6 +252,7 @@ public class Solana2048Service : MonoBehaviour
                     
                 var playerData = PlayerData.Deserialize(Convert.FromBase64String(result.result.value.data[0]));
                 CurrentPlayerData = playerData;
+                ServiceFactory.Resolve<NftService>().UpdateScoreForSelectedNFt(CurrentPlayerData);
                 Debug.Log(
                     $"New game data arrived x: {CurrentPlayerData.NewTileX} y: {CurrentPlayerData.NewTileY} level: {CurrentPlayerData.NewTileLevel}");
                 OnPlayerDataChanged?.Invoke(playerData);
@@ -320,7 +336,7 @@ public class Solana2048Service : MonoBehaviour
             OnPlayerDataChanged?.Invoke(playerData);
         }*/
 
-        public async UniTask<bool> InitGameDataAccount()
+        public async UniTask<bool> InitGameDataAccount(Action<string> onError = null)
         {
             var selectedNft = ServiceFactory.Resolve<NftService>().SelectedNft;
             PublicKey avatar = selectedNft == null
@@ -356,8 +372,14 @@ public class Solana2048Service : MonoBehaviour
                 tx.PartialSign(new[] { Web3.Account, sessionWallet.Account });
             }
 
-            bool success = await SendAndConfirmTransaction(Web3.Wallet, tx, "initialize");
-
+            bool success = await SendAndConfirmTransaction(Web3.Wallet, tx, "initialize", () =>
+            {
+            }, s =>
+            {
+                onError?.Invoke(s);
+            });
+            _isSessionInitialized = await IsSessionTokenInitialized();
+            
             if (!success)
             {
                 Debug.LogError("Init was not successful");
@@ -405,6 +427,10 @@ public class Solana2048Service : MonoBehaviour
             {
                 if (!_isSessionInitialized)
                 {
+                    _isSessionInitialized = await IsSessionTokenInitialized();
+                }
+                if (!_isSessionInitialized)
+                {
                     var topUp = true;
 
                     var validity = DateTimeOffset.UtcNow.AddHours(23).ToUnixTimeSeconds();
@@ -429,7 +455,7 @@ public class Solana2048Service : MonoBehaviour
                 }
                 
                 requestStarted = DateTime.Now;
-                SendAndConfirmTransaction(walletToUse, tx, "Push in direction: " + direction, () => {}, data =>
+                await SendAndConfirmTransaction(walletToUse, tx, "Push in direction: " + direction, () => {}, data =>
                 {
                     OnGameReset?.Invoke();
                     SubscribeToPlayerDataUpdates();
@@ -441,27 +467,73 @@ public class Solana2048Service : MonoBehaviour
 
         // This is just a workaround since the Solana UnitySDK currently the confirm transactions gets stuck in webgl
         // because of Task.Delay(). Should be fixed soon.
-        private async Task<bool> SendAndConfirmTransaction(WalletBase wallet, Transaction transaction, string label = "", Action onSucccess = null, Action<ErrorData> onError = null)
+        private async UniTask<bool> SendAndConfirmTransaction(WalletBase wallet, Transaction transaction, string label = "", Action onSucccess = null, Action<string> onError = null)
         {
             transactionsInProgress++;
-            var res=  await wallet.SignAndSendTransaction(transaction, commitment: Commitment.Confirmed);
+            Debug.Log("Sending and confirming transactiom. " + label);
+            RequestResult<string> res;
+            try
+            {
+                res = await wallet.SignAndSendTransaction(transaction, commitment: Commitment.Confirmed);
+            }
+            catch (Exception e)
+            {
+                transactionsInProgress--;
+                onError?.Invoke(e.ToString());
+                return false;
+            }
+            
             Debug.Log("Transaction sent: " + res.RawRpcResponse);
             if (res.WasSuccessful && res.Result != null)
             {
-                await Web3.Rpc.ConfirmTransaction(res.Result, Commitment.Confirmed);
+                Debug.Log("Confirm");
+
+                await ConfirmTransaction(Web3.Rpc, res.Result, Commitment.Confirmed);
+                Debug.Log("Confirm done");
             }
             else
             {
                 Debug.LogError("Transaction failed: " + res.RawRpcResponse);
-
-                onError?.Invoke(res.ErrorData);
+                onError?.Invoke(res.ErrorData.ToString());
+                return false;
             }
-            Debug.Log($"Send tranaction {label} with response: {res.RawRpcResponse}");
+            Debug.Log($"Send transaction {label} with response: {res.RawRpcResponse}");
             transactionsInProgress--;
             onSucccess?.Invoke();
             return true;
         }
 
+        public static async UniTask<bool> ConfirmTransaction(
+            IRpcClient rpc,
+            string hash,
+            Commitment commitment = Commitment.Finalized)
+        {
+            TimeSpan delay = commitment == Commitment.Finalized ? TimeSpan.FromSeconds(60.0) : TimeSpan.FromSeconds(30.0);
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+            CancellationToken cancelToken = cancellationTokenSource.Token;
+            cancellationTokenSource.CancelAfter(delay);
+            if (commitment == Commitment.Processed)
+                commitment = Commitment.Confirmed;
+            while (!cancelToken.IsCancellationRequested)
+            {
+                await UniTask.Delay(50, cancellationToken: cancelToken);
+                RequestResult<ResponseValue<List<SignatureStatusInfo>>> signatureStatusesAsync = await rpc.GetSignatureStatusesAsync(new List<string>()
+                {
+                    hash
+                }, true);
+                if (signatureStatusesAsync.WasSuccessful && signatureStatusesAsync.Result?.Value != null && signatureStatusesAsync.Result.Value.TrueForAll((Predicate<SignatureStatusInfo>) (sgn =>
+                    {
+                        if (sgn == null || sgn.ConfirmationStatus == null)
+                            return false;
+                        if (sgn.ConfirmationStatus.Equals(commitment.ToString().ToLower()))
+                            return true;
+                        return commitment.Equals((object) Commitment.Confirmed) && sgn.ConfirmationStatus.Equals(Commitment.Finalized.ToString().ToLower());
+                    })))
+                    return true;
+            }
+            return false;
+        }
+        
         public async void RequestHighscore()
         {
             try

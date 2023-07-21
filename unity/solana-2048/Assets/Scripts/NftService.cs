@@ -2,12 +2,18 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Frictionless;
 using Solana.Unity.Metaplex.NFT.Library;
 using Solana.Unity.Metaplex.Utilities.Json;
+using Solana.Unity.Programs.Models;
+using Solana.Unity.Rpc.Types;
 using Solana.Unity.SDK;
 using Solana.Unity.SDK.Nft;
 using Solana.Unity.Wallet;
+using SolanaTwentyfourtyeight.Accounts;
 using UnityEngine;
 using Creator = Solana.Unity.Metaplex.NFT.Library.Creator;
 
@@ -25,10 +31,10 @@ namespace SolPlay.Scripts.Services
         public Texture2D LocalDummyNft;
         public bool LoadNftsOnStartUp = true;
         public bool AddDummyNft = true;
+        private Dictionary<string, PlayerData> NftPlayerDatas = new Dictionary<string, PlayerData>();
 
         public void Awake()
         {
-            ResetSelectedNft();
             if (ServiceFactory.Resolve<NftService>() != null)
             {
                 Destroy(gameObject);
@@ -52,12 +58,28 @@ namespace SolPlay.Scripts.Services
         public void LoadNfts()
         {
             LoadedNfts.Clear();
-            Web3.LoadNFTs(true, true, 500);
+            Web3.AutoLoadNfts = false;
+            Web3.LoadNftsTextureByDefault = false;
+            Web3.LoadNFTs(false, true, 200, Commitment.Confirmed).Forget();
             IsLoadingTokenAccounts = true;
+            if (AddDummyNft)
+            {
+                var dummyLocalNft = CreateDummyLocalNft(Web3.Account.PublicKey);
+                LoadedNfts.Add(dummyLocalNft);
+                MessageRouter.RaiseMessage(new NftLoadedMessage(dummyLocalNft));
+                SelectedNft = dummyLocalNft;
+                PlayerPrefs.SetString("SelectedNft", SelectedNft.metaplexData.data.mint);
+            }
             Web3.OnNFTsUpdate += (nfts, totalAmount) =>
             {
                 foreach (var newNft in nfts)
                 {
+                    if (GetSelectedNftPubKey() == newNft.metaplexData.data.mint)
+                    {
+                        //SelectedNft = newNft;
+                        //SelectNft(SelectedNft);
+                    }
+                    
                     bool wasAlreadyLoaded = false;
                     foreach (var oldNft in LoadedNfts)
                     {
@@ -69,19 +91,45 @@ namespace SolPlay.Scripts.Services
 
                     if (!wasAlreadyLoaded)
                     {
-                        MessageRouter.RaiseMessage(new NftLoadedMessage(newNft));
-                        LoadedNfts.Add(newNft);
+                        LoadScoreForNFt(newNft);
+
                     }
                 }
 
                 IsLoadingTokenAccounts = nfts.Count != totalAmount;
             };
-            if (AddDummyNft)
+        }
+
+        private async Task LoadScoreForNFt(Nft newNft)
+        {
+            Debug.Log("Load score for: " + newNft.metaplexData.data.mint);
+            PublicKey.TryFindProgramAddress(new[]
+                {
+                    Encoding.UTF8.GetBytes("player7"), Web3.Account.PublicKey.KeyBytes,
+                    new PublicKey(newNft.metaplexData.data.mint).KeyBytes
+                },
+                Solana2048Service.Solana_2048_ProgramIdPubKey, out PublicKey nftPDA, out byte bump);
+
+            AccountResultWrapper<PlayerData> playerData = null;
+
+            try
             {
-                var dummyLocalNft = CreateDummyLocalNft(Web3.Account.PublicKey);
-                LoadedNfts.Add(dummyLocalNft);
-                MessageRouter.RaiseMessage(new NftLoadedMessage(dummyLocalNft));
+                playerData =
+                    await Solana2048Service.Instance.solana_2048_client.GetPlayerDataAsync(nftPDA, Commitment.Confirmed);
+               
             }
+            catch (Exception e)
+            {
+                Debug.LogWarning("Could not get player data: " + e);
+            }
+
+            if (playerData != null && playerData.ParsedResult != null)
+            {
+                NftPlayerDatas[newNft.metaplexData.data.mint] = playerData.ParsedResult;
+            }
+            
+            MessageRouter.RaiseMessage(new NftLoadedMessage(newNft));
+            LoadedNfts.Add(newNft);
         }
 
         public Nft CreateDummyLocalNft(string publicKey)
@@ -157,6 +205,30 @@ namespace SolPlay.Scripts.Services
         {
             yield return null;
         }
+
+        public bool TryGetScore(Nft nft, out uint score)
+        {
+            if (NftPlayerDatas.TryGetValue(nft.metaplexData.data.mint, out PlayerData playerData))
+            {
+                score = playerData.Score; 
+                return true;
+            }
+
+            score = 0;
+            return false;
+        }
+
+        public void UpdateScoreForSelectedNFt(PlayerData newPlayerData)
+        {
+            if (SelectedNft != null)
+            {
+                NftPlayerDatas[SelectedNft.metaplexData.data.mint] = newPlayerData;
+            }
+            else
+            {
+                NftPlayerDatas[Web3.Account.PublicKey] = newPlayerData;
+            }
+        }
     }
 
     public class NftLoadedMessage
@@ -187,7 +259,4 @@ namespace SolPlay.Scripts.Services
     {
     }
 
-    public class NftMintFinishedMessage
-    {
-    }
 }

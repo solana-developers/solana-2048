@@ -173,8 +173,7 @@ public class BoardManager : MonoBehaviour
             return;
         }
         
-
-        if (Solana2048Service.Instance.CurrentPlayerData == null || Solana2048Service.Instance.CurrentPlayerData.GameOver)
+        if (Solana2048Service.Instance.CurrentPlayerData == null || Solana2048Service.Instance.CurrentPlayerData.GameOver || !Solana2048Service.Instance.IsInitialized())
         {
             cachedInput = null;
             return;
@@ -325,12 +324,14 @@ public class BoardManager : MonoBehaviour
                 blimp.transform.position = b.Cell.transform.position;
                 StartCoroutine(DestroyAfterSeconds(blimp));
                 b.Init(newState);
+                //Solana2048Service.Instance.CurrentPlayerData.Score += newState.Number;
             }
             else
             {
                 Debug.Log("Tile was destroyed during move.");
             }
         });
+        
 
         // TODO: Animate score
         //gameManager.IncreaseScore(newState.number);

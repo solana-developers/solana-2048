@@ -26,7 +26,8 @@ public class SocketStatusWidget : MonoBehaviour
         var socketService = ServiceFactory.Resolve<SolPlayWebSocketService>();
         if (socketService != null)
         {
-            StatusText.text = "Socket: " + socketService.GetState().ToString();
+            StatusText.text = "Socket: " + socketService.GetState() + $"({Solana2048Service.Instance.CurrentAverageSocketResponseTime.ToString("F0")}ms)";
+
             ReconnectButton.gameObject.SetActive(socketService.GetState() == WebSocketState.Closed);
         }
     }

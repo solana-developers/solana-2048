@@ -22,6 +22,8 @@ namespace SolPlay.Scripts.Ui
         public GameObject LoadingSpinner;
         public GameObject MinitingBlocker;
 
+        private bool loadedNfts;
+        
         async void Start()
         {
             GetNFtsDataButton.onClick.AddListener(OnGetNftButtonClicked);
@@ -34,26 +36,12 @@ namespace SolPlay.Scripts.Ui
             MessageRouter
                 .AddHandler<NftLoadedMessage>(OnNftLoadedMessage);
             MessageRouter
-                .AddHandler<NftMintFinishedMessage>(OnNftMintFinishedMessage);
-            MessageRouter
                 .AddHandler<NftSelectedMessage>(OnNftSelectedMessage);
-
-            Web3.OnLogin += OnLogin;
         }
 
         private void OnNftSelectedMessage(NftSelectedMessage obj)
         {
             Close();
-        }
-
-        private void OnDestroy()
-        {
-            Web3.OnLogin -= OnLogin;
-        }
-
-        private async void OnLogin(Account account)
-        {
-            await OnLogin();
         }
 
         public override void Open(UiService.UiData uiData)
@@ -66,7 +54,11 @@ namespace SolPlay.Scripts.Ui
                 return;
             }
 
-            ServiceFactory.Resolve<NftService>().LoadNfts();
+            if (!loadedNfts)
+            {
+                loadedNfts = true;
+                ServiceFactory.Resolve<NftService>().LoadNfts();   
+            }
 
             NftItemListView.UpdateContent();
             NftItemListView.SetData(nft =>
@@ -75,11 +67,6 @@ namespace SolPlay.Scripts.Ui
                 Close();
             });
             base.Open(uiData);
-        }
-
-        private async Task OnLogin()
-        {
-            await RequestNfts();
         }
 
         private async void OnMintInAppButtonClicked()
@@ -96,6 +83,8 @@ namespace SolPlay.Scripts.Ui
                         {
                             MinitingBlocker.gameObject.SetActive(false);
                         }
+
+                        RequestNfts();
                     });
             await Web3.Wallet.ActiveRpcClient.ConfirmTransaction(signature, Commitment.Confirmed);
             MinitingBlocker.gameObject.SetActive(false);
@@ -131,11 +120,6 @@ namespace SolPlay.Scripts.Ui
         private void OnNftLoadingFinishedMessage(NftLoadingFinishedMessage message)
         {
             NftItemListView.UpdateContent();
-        }
-
-        private async void OnNftMintFinishedMessage(NftMintFinishedMessage message)
-        {
-            await RequestNfts();
         }
 
         private void Update()

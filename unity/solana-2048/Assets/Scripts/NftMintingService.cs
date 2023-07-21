@@ -301,6 +301,7 @@ namespace SolPlay.Scripts.Services
 
             var tx = Transaction.Deserialize(transactionBuilder.Build(new List<Account> {fromAccount, mint}));
             var res = await Web3.Wallet.SignAndSendTransaction(tx, true, Commitment.Confirmed);
+            var confirmed = await Web3.Wallet.ActiveRpcClient.ConfirmTransaction(res.Result, Commitment.Confirmed);
             Debug.Log(res.Result);
 
             if (!res.WasSuccessful)

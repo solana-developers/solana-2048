@@ -1,13 +1,13 @@
-using System;
 using System.Collections;
+using DG.Tweening;
 using Frictionless;
 using SolanaTwentyfourtyeight.Accounts;
 using Solana.Unity.SDK;
+using Solana.Unity.Wallet;
 using Solana.Unity.Wallet.Bip39;
 using SolPlay.Scripts.Services;
 using SolPlay.Scripts.Ui;
 using TMPro;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,6 +18,7 @@ public class Solana2048Screen : MonoBehaviour
     public Button LoginWalletAdapterMainNetButton;
     public Button ResetButton;
     public Button TestButton;
+    public Button ReloadButton;
     
     public Button RevokeSessionButton;
     public Button NftsButton;
@@ -32,6 +33,7 @@ public class Solana2048Screen : MonoBehaviour
     public GameObject NotInitializedRoot;
     public GameObject InitializedRoot;
     public GameObject NotLoggedInRoot;
+    public bool UseWhirligig;
 
     public string DevnetRpc = "";
     public string MainnetRpc = "";
@@ -54,11 +56,26 @@ public class Solana2048Screen : MonoBehaviour
         ResetButton.onClick.AddListener(OnResetButtonClicked);
         InitGameDataButton.onClick.AddListener(OnInitGameDataButtonClicked);
         TestButton.onClick.AddListener(OnTestClicked);
+        ReloadButton.onClick.AddListener(OnReloadClicked);
         Solana2048Service.OnPlayerDataChanged += OnPlayerDataChanged;
 
         StartCoroutine(UpdateNextEnergy());
         
         Solana2048Service.OnInitialDataLoaded += UpdateContent;
+        Web3.OnLogin += OnLogin;
+    }
+
+    private void OnReloadClicked()
+    {
+        Application.ExternalEval("document.location.reload(true)");
+    }
+
+    private void OnLogin(Account obj)
+    {
+        if (Solana2048Service.Instance.CurrentPlayerData == null)
+        {
+           // ServiceFactory.Resolve<UiService>().OpenPopup(UiService.ScreenType.NftListPopup, new NftListPopupUiData(false, Web3.Wallet));
+        }
     }
 
     private void OnTestClicked()
@@ -69,17 +86,19 @@ public class Solana2048Screen : MonoBehaviour
     private void Update()
     {
         LoadingSpinner.gameObject.SetActive(Solana2048Service.Instance.IsAnyTransactionInProgress);
-        InitGameDataButton.interactable = !Solana2048Service.Instance.IsAnyTransactionInProgress;
-        if (targetScore != currentScore)
-        {
-            currentScore = (uint) Mathf.Lerp(currentScore, targetScore, Time.deltaTime);
-            ScoreText.text = currentScore.ToString();
-        }
+        // Exception handling does not work when canceling transactions so better have it always enabled.
+        //InitGameDataButton.interactable = !Solana2048Service.Instance.IsAnyTransactionInProgress;
+        InitGameDataButton.interactable = true;
+        ReloadButton.gameObject.SetActive(Solana2048Service.Instance.CantLoadBlockhash);
     }
 
     private async void OnInitGameDataButtonClicked()
     {
-        await Solana2048Service.Instance.InitGameDataAccount();
+        bool success = await Solana2048Service.Instance.InitGameDataAccount(onError: s =>
+        {
+            Debug.LogError("Login error: " + s);
+        });
+        
     }
 
     private void OnNftsButtonClicked()
@@ -108,6 +127,10 @@ public class Solana2048Screen : MonoBehaviour
         Web3.Instance.rpcCluster = RpcCluster.DevNet;
         Web3.Instance.customRpc = DevnetRpc;
         Web3.Instance.webSocketsRpc = DevnetRpc.Replace("https://", "wss://");
+        if (UseWhirligig)
+        {
+            Web3.Instance.webSocketsRpc += "/whirligig/";
+        }
         await Web3.Instance.LoginWalletAdapter();
     }
 
@@ -116,7 +139,10 @@ public class Solana2048Screen : MonoBehaviour
         Web3.Instance.rpcCluster = RpcCluster.MainNet;
         Web3.Instance.customRpc = MainnetRpc;
         Web3.Instance.webSocketsRpc = MainnetRpc.Replace("https://", "wss://");
-
+        if (UseWhirligig)
+        {
+            Web3.Instance.webSocketsRpc += "/whirligig/";
+        }
         await Web3.Instance.LoginWalletAdapter();
     }
 
@@ -125,6 +151,12 @@ public class Solana2048Screen : MonoBehaviour
         Web3.Instance.rpcCluster = RpcCluster.DevNet;
         Web3.Instance.customRpc = EditortRpc;
         Web3.Instance.webSocketsRpc = EditortRpc.Replace("https://", "wss://");
+
+        if (UseWhirligig)
+        {
+            Web3.Instance.webSocketsRpc += "/whirligig/";
+        }
+        Debug.Log(Web3.Instance.webSocketsRpc);
 
         var newMnemonic = new Mnemonic(WordList.English, WordCount.Twelve);
 
@@ -145,6 +177,16 @@ public class Solana2048Screen : MonoBehaviour
     private void OnPlayerDataChanged(PlayerData playerData)
     {
         UpdateContent();
+                
+        DOTween.To(() => currentScore, x => currentScore = x, playerData.Score, 1)
+            .OnUpdate(() =>
+            {
+                ScoreText.text = currentScore.ToString();
+            });
+        if (currentScore != targetScore)
+        {
+            ScoreText.transform.DOPunchScale(new Vector3(0.1f, 0.1f, 0.1f), 0.3f);   
+        }
     }
 
     private void UpdateContent()
@@ -156,13 +198,5 @@ public class Solana2048Screen : MonoBehaviour
         InitializedRoot.SetActive(Solana2048Service.Instance.CurrentPlayerData != null);
 
         NotLoggedInRoot.SetActive(Web3.Account == null);
-
-        if (Solana2048Service.Instance.CurrentPlayerData == null)
-        {
-            return;
-        }
-    
-        targetScore = Solana2048Service.Instance.CurrentPlayerData.Score;
     }
-
 }
