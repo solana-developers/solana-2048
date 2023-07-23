@@ -69,6 +69,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 90710be51d0d74455baccc1f43cfaaf9, type: 2}
   GameOverText: {fileID: 6393324520305052991}
   BlimpPrefab: {fileID: 1240491598403943179, guid: d344c11aa41bd4a6091876a4e889da0e, type: 3}
+  MoveAudioSource: {fileID: 0}
+  MergeAudioSource: {fileID: 0}
+  MoveClip: {fileID: 0}
+  MergeClip: {fileID: 0}
   IsWaiting: 0
   BackgroundMeshRenderer: {fileID: 807115644214668570}
   TouchInputHandler: {fileID: 1911136921}
@@ -295,8 +299,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4280756182
-  m_fontColor: {r: 0.8396226, g: 0.1544589, b: 0.1544589, a: 1}
+    rgba: 4278979721
+  m_fontColor: {r: 0.5377358, g: 0.04819329, b: 0.04819329, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:

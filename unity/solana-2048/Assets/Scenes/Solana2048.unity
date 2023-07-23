@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.4445827, g: 0.49408823, b: 0.5733585, a: 1}
+  m_IndirectSpecularColor: {r: 0.44458336, g: 0.49408978, b: 0.57335985, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1484,7 +1484,7 @@ MonoBehaviour:
   NotInitializedRoot: {fileID: 1648474100}
   InitializedRoot: {fileID: 895286101}
   NotLoggedInRoot: {fileID: 772684576}
-  UseWhirligig: 1
+  UseWhirligig: 0
   DevnetRpc: https://devnet.helius-rpc.com/?api-key=dcee9dad-fb42-4a26-b394-41b53e81d913
   MainnetRpc: https://rpc.helius.xyz/?api-key=dcee9dad-fb42-4a26-b394-41b53e81d913
   EditortRpc: https://devnet.helius-rpc.com/?api-key=dcee9dad-fb42-4a26-b394-41b53e81d913
@@ -2666,7 +2666,7 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 0.692
+    m_Strength: 0.515
     m_Bias: 0.05
     m_NormalBias: 0
     m_NearPlane: 5.2
@@ -3090,24 +3090,12 @@ PrefabInstance:
       value: 5.79
       objectReference: {fileID: 0}
     - target: {fileID: 3326716001526032658, guid: a060162f28bc440e8b0dc93bdaa3940b, type: 3}
-      propertyPath: m_fontColor.b
-      value: 0.13679248
-      objectReference: {fileID: 0}
-    - target: {fileID: 3326716001526032658, guid: a060162f28bc440e8b0dc93bdaa3940b, type: 3}
-      propertyPath: m_fontColor.g
-      value: 0.13679248
-      objectReference: {fileID: 0}
-    - target: {fileID: 3326716001526032658, guid: a060162f28bc440e8b0dc93bdaa3940b, type: 3}
-      propertyPath: m_fontColor.r
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3326716001526032658, guid: a060162f28bc440e8b0dc93bdaa3940b, type: 3}
       propertyPath: m_fontSizeBase
       value: 5.79
       objectReference: {fileID: 0}
     - target: {fileID: 3326716001526032658, guid: a060162f28bc440e8b0dc93bdaa3940b, type: 3}
       propertyPath: m_fontColor32.rgba
-      value: 4280493055
+      value: 4278913934
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 807115644214668569, guid: a060162f28bc440e8b0dc93bdaa3940b, type: 3}
@@ -3211,6 +3199,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7110121763268632880, guid: 0bf5c3b64713d437fbb4bfb2e4a8518e, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0.9779053
+      objectReference: {fileID: 0}
     - target: {fileID: 7110121763268632895, guid: 0bf5c3b64713d437fbb4bfb2e4a8518e, type: 3}
       propertyPath: m_characterSpacing
       value: 5
@@ -3234,8 +3226,12 @@ PrefabInstance:
       value: -34.918
       objectReference: {fileID: 0}
     - target: {fileID: 4543230662287133970, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0.97789764
+      objectReference: {fileID: 0}
+    - target: {fileID: 4543230662287133970, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 1.459
+      value: 1.4589996
       objectReference: {fileID: 0}
     - target: {fileID: 4543230662287133981, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
       propertyPath: m_text
@@ -3523,6 +3519,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 895286102}
     m_Modifications:
+    - target: {fileID: 4543230662287133970, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0.9779053
+      objectReference: {fileID: 0}
     - target: {fileID: 4543230662287133981, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
       propertyPath: m_text
       value: NEW GAME
@@ -4326,6 +4326,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 895286102}
     m_Modifications:
+    - target: {fileID: 4543230662287133970, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0.9779053
+      objectReference: {fileID: 0}
     - target: {fileID: 4543230662287133981, guid: c27ebc42ed62d4f528778183ed634846, type: 3}
       propertyPath: m_text
       value: RANKING
@@ -4609,14 +4613,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1859727320}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.643, y: -0.5600281, z: -1.6753}
-  m_LocalScale: {x: 4.5791917, y: 1.0527, z: 4.541096}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: 1.6301, y: -0.56, z: -1.6436}
+  m_LocalScale: {x: 5.105271, y: 1.0527, z: 4.9805484}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 5
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!1001 &1957529229
 PrefabInstance:
   m_ObjectHideFlags: 0
