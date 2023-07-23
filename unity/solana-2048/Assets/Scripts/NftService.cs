@@ -60,11 +60,11 @@ namespace SolPlay.Scripts.Services
             LoadedNfts.Clear();
             Web3.AutoLoadNfts = false;
             Web3.LoadNftsTextureByDefault = false;
-            Web3.LoadNFTs(false, true, 200, Commitment.Confirmed).Forget();
+            Web3.LoadNFTs(false, true, 500, Commitment.Confirmed).Forget();
             IsLoadingTokenAccounts = true;
             if (AddDummyNft)
             {
-                var dummyLocalNft = CreateDummyLocalNft(Web3.Account.PublicKey);
+                var dummyLocalNft = CreateDummyLocalNft(Web3.Account.PublicKey, Web3.Account.PublicKey);
                 LoadedNfts.Add(dummyLocalNft);
                 MessageRouter.RaiseMessage(new NftLoadedMessage(dummyLocalNft));
                 SelectedNft = dummyLocalNft;
@@ -116,11 +116,10 @@ namespace SolPlay.Scripts.Services
             {
                 playerData =
                     await Solana2048Service.Instance.solana_2048_client.GetPlayerDataAsync(nftPDA, Commitment.Confirmed);
-               
             }
             catch (Exception e)
             {
-                Debug.LogWarning("Could not get player data: " + e);
+                //Debug.LogWarning("Could not get player data: " + e);
             }
 
             if (playerData != null && playerData.ParsedResult != null)
@@ -132,7 +131,7 @@ namespace SolPlay.Scripts.Services
             LoadedNfts.Add(newNft);
         }
 
-        public Nft CreateDummyLocalNft(string publicKey)
+        public Nft CreateDummyLocalNft(string mint, PublicKey owner)
         {
             Nft dummyLocalNft = new Nft();
 
@@ -144,7 +143,8 @@ namespace SolPlay.Scripts.Services
             metaPlexData.offchainData.symbol = "dummy";
             metaPlexData.offchainData.name = "Dummy Nft";
             metaPlexData.offchainData.description = "A dummy nft which uses the wallet puy key";
-            metaPlexData.mint = publicKey;
+            metaPlexData.owner = owner;
+            metaPlexData.mint = mint;
             metaPlexData.metadata = new OnChainData("Dummy NFT", 
                 "dumm", "test", 0, new List<Creator>(), 0, 0, null,
                 null, null, true);

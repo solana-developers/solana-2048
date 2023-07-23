@@ -1,8 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using DefaultNamespace;
+using DG.Tweening;
 using Frictionless;
+using Solana.Unity.SDK;
+using Solana.Unity.Wallet;
 using SolanaTwentyfourtyeight.Accounts;
 using SolPlay.Scripts.Ui;
 using UnityEngine;
@@ -19,7 +23,11 @@ public class BoardManager : MonoBehaviour
     public TileConfig[] tileConfigs;
     public GameObject GameOverText;
     public TextBlimp3D BlimpPrefab;
-
+    public AudioSource MoveAudioSource;
+    public AudioSource MergeAudioSource;
+    public AudioClip MoveClip;
+    public AudioClip MergeClip;
+    
     public bool IsWaiting;
     public DateTime? SocketMessageTimeout = null;
     public MeshRenderer BackgroundMeshRenderer;
@@ -60,10 +68,23 @@ public class BoardManager : MonoBehaviour
         Solana2048Service.OnGameReset -= OnGameReset;
     }
 
+    public void LoadGameStateFromNft(PublicKey player, PublicKey nft)
+    {
+        PublicKey.TryFindProgramAddress(new[]
+            {
+                Encoding.UTF8.GetBytes("player7"), player.KeyBytes,nft.KeyBytes
+            },
+            Solana2048Service.Solana_2048_ProgramIdPubKey, out PublicKey PlayerDataPDA, out byte bump);
+        
+        
+    }
+    
     private void OnGameReset()
     {
         isInitialized = false;
-        foreach (Tile tile in tiles) {
+        foreach (Tile tile in tiles)
+        {
+            tile.transform.DOKill();
             Destroy(tile.gameObject);
         }
         tiles.Clear();
@@ -79,9 +100,6 @@ public class BoardManager : MonoBehaviour
 
     private void OnPlayerDataChange(PlayerData playerData)
     {
-        foreach (var tile in tiles) {
-            tile.IsLocked = false;
-        }
         SetData(playerData);
     }
 
@@ -118,6 +136,8 @@ public class BoardManager : MonoBehaviour
 
         SetBackgroundImageOfHighestTile();
         
+        SocketMessageTimeout = null;
+        DirectionIndicator.SetDirection(null);
         if (anyTileOutOfSync)
         {
             RefreshFromPlayerdata(playerData);
@@ -125,8 +145,6 @@ public class BoardManager : MonoBehaviour
         }
         
         IsWaiting = false;
-        SocketMessageTimeout = null;
-        DirectionIndicator.SetDirection(null);
 
         GameOverText.gameObject.SetActive(playerData.GameOver);
         if (playerData.GameOver)
@@ -153,12 +171,13 @@ public class BoardManager : MonoBehaviour
         }
     }
     
-    private void RefreshFromPlayerdata(PlayerData playerData)
+    public void RefreshFromPlayerdata(PlayerData playerData)
     {
         OnGameReset();
         CreateStartingTiles(playerData);
         isInitialized = true;
         IsWaiting = false;
+        GameOverText.gameObject.SetActive(playerData.GameOver);
     }
 
     private async void Update()
@@ -178,17 +197,6 @@ public class BoardManager : MonoBehaviour
             cachedInput = null;
             return;
         }
-        
-        if (Solana2048Service.Instance == null || IsWaiting)
-        {
-            return;
-        }
-
-        if (TouchInputHandler.InputState != null)
-        {
-            cachedInput = TouchInputHandler.InputState;
-            TouchInputHandler.InputState = null;
-        }
         if (Input.GetKeyUp(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.D))
         {
             cachedInput = Vector2Int.right;
@@ -205,29 +213,48 @@ public class BoardManager : MonoBehaviour
         {
             cachedInput = Vector2Int.up;
         }
+        if (Solana2048Service.Instance == null || IsWaiting)
+        {
+            return;
+        }
+
+        if (TouchInputHandler.InputState != null)
+        {
+            cachedInput = TouchInputHandler.InputState;
+            TouchInputHandler.InputState = null;
+        }
+       
         if (cachedInput == Vector2Int.right)
         {
-            Move(Vector2Int.right, WIDTH - 2, -1, 0, 1);
-            Solana2048Service.Instance.PushInDirection(true, 0);
-            DirectionIndicator.SetDirection(Vector2Int.right);
+            if (Move(Vector2Int.right, WIDTH - 2, -1, 0, 1))
+            {
+                Solana2048Service.Instance.PushInDirection(true, 0);
+                DirectionIndicator.SetDirection(Vector2Int.right);
+            }
         }
         if (cachedInput == Vector2Int.down)
         {
-            Move(Vector2Int.down, 0, 1, HEIGHT - 2, -1);
-            Solana2048Service.Instance.PushInDirection(true, 1);
-            DirectionIndicator.SetDirection(Vector2Int.down);
+            if (Move(Vector2Int.down, 0, 1, HEIGHT - 2, -1))
+            {
+                Solana2048Service.Instance.PushInDirection(true, 1);
+                DirectionIndicator.SetDirection(Vector2Int.down);
+            }
         }
         if (cachedInput == Vector2Int.left)
         {
-            Move(Vector2Int.left, 1, 1, 0, 1);
-            Solana2048Service.Instance.PushInDirection(true, 2);
-            DirectionIndicator.SetDirection(Vector2Int.left);
+            if (Move(Vector2Int.left, 1, 1, 0, 1))
+            {
+                Solana2048Service.Instance.PushInDirection(true, 2);
+                DirectionIndicator.SetDirection(Vector2Int.left);
+            }
         }
         if (cachedInput == Vector2Int.up)
         {
-            Move(Vector2Int.up, 0, 1, 1, 1);
-            Solana2048Service.Instance.PushInDirection(true, 3);
-            DirectionIndicator.SetDirection(Vector2Int.up);
+            if (Move(Vector2Int.up, 0, 1, 1, 1))
+            {
+                Solana2048Service.Instance.PushInDirection(true, 3);
+                DirectionIndicator.SetDirection(Vector2Int.up);
+            }
         }
 
         cachedInput = null;
@@ -250,8 +277,13 @@ public class BoardManager : MonoBehaviour
         return GetCell(adjecentX, adjecentY);
     }
 
-    private void Move(Vector2Int direction, int startX, int incrementX, int startY, int incrementY)
+    private bool Move(Vector2Int direction, int startX, int incrementX, int startY, int incrementY)
     {
+        foreach (var tile in tiles) {
+            tile.IsLocked = false;
+        }
+
+        MergeAudioSource.pitch = 1;
         bool moved = false;
 
         for (int x = startX; x >= 0 && x < WIDTH; x += incrementX)
@@ -268,9 +300,16 @@ public class BoardManager : MonoBehaviour
 
         if (moved)
         {
+            if (SoundToggle.IsSoundEnabled())
+            {
+                MoveAudioSource.PlayOneShot(MoveClip);
+            }
+
             IsWaiting = true;
             SocketMessageTimeout = DateTime.Now;
         }
+
+        return moved;
     }
 
     private bool MoveTile(Tile tile, Vector2Int direction)
@@ -319,11 +358,18 @@ public class BoardManager : MonoBehaviour
 
             if (b != null)
             {
+                if (SoundToggle.IsSoundEnabled())
+                {
+                    var newPitch = 1 + 0.05f * (index -1);
+                    MergeAudioSource.pitch = MergeAudioSource.pitch < newPitch ? newPitch : MergeAudioSource.pitch;
+                    MergeAudioSource.PlayOneShot(MergeClip);
+                }
                 var blimp = Instantiate(BlimpPrefab);
-                blimp.SetData(newState.Number.ToString());
-                blimp.transform.position = b.Cell.transform.position;
+                blimp.SetData(b.currentConfig.Number.ToString());
+                blimp.transform.position = b.transform.position;
                 StartCoroutine(DestroyAfterSeconds(blimp));
-                b.Init(newState);
+                b.UpdateVisualState();
+                //b.PlayMergeSound();
                 //Solana2048Service.Instance.CurrentPlayerData.Score += newState.Number;
             }
             else
@@ -331,7 +377,9 @@ public class BoardManager : MonoBehaviour
                 Debug.Log("Tile was destroyed during move.");
             }
         });
-        
+        int index = Mathf.Clamp(IndexOf(b.currentConfig) + 1, 0, tileConfigs.Length - 1);
+        TileConfig newState = tileConfigs[index];
+        b.Init(newState, false);
 
         // TODO: Animate score
         //gameManager.IncreaseScore(newState.number);

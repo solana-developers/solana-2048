@@ -24,7 +24,7 @@ namespace SolPlay.Scripts.Ui
 
         private bool loadedNfts;
         
-        async void Start()
+        void Start()
         {
             GetNFtsDataButton.onClick.AddListener(OnGetNftButtonClicked);
             MintInAppButton.onClick.AddListener(OnMintInAppButtonClicked);
@@ -84,7 +84,7 @@ namespace SolPlay.Scripts.Ui
                             MinitingBlocker.gameObject.SetActive(false);
                         }
 
-                        RequestNfts();
+                        ServiceFactory.Resolve<NftService>().LoadNfts();
                     });
             await Web3.Wallet.ActiveRpcClient.ConfirmTransaction(signature, Commitment.Confirmed);
             MinitingBlocker.gameObject.SetActive(false);
@@ -107,9 +107,9 @@ namespace SolPlay.Scripts.Ui
             return ownsBeaver;
         }
 
-        private async void OnGetNftButtonClicked()
+        private void OnGetNftButtonClicked()
         {
-            await RequestNfts();
+            ServiceFactory.Resolve<NftService>().LoadNfts();
         }
 
         private void OnNftLoadingStartedMessage(NftLoadingStartedMessage message)
@@ -130,11 +130,6 @@ namespace SolPlay.Scripts.Ui
                 GetNFtsDataButton.interactable = !nftService.IsLoadingTokenAccounts;
                 LoadingSpinner.gameObject.SetActive(nftService.IsLoadingTokenAccounts);
             }
-        }
-
-        private async Task RequestNfts()
-        {
-            ServiceFactory.Resolve<NftService>().LoadNfts();
         }
     }
 }

@@ -19,3 +19,4 @@ MonoBehaviour:
   ShakeStrength: 0.05
   MaterialColor: {r: 0.26415092, g: 0.048593808, b: 0.0736586, a: 1}
   BackgroundMaterial: {fileID: 2100000, guid: f930d90599b504acfaf3401bdeaec537, type: 2}
+  Index: 15

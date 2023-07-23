@@ -12,5 +12,6 @@ namespace DefaultNamespace
         public float ShakeStrength = 0.3f;
         public Color MaterialColor;
         public Material BackgroundMaterial;
+        public int Index;
     }
 }

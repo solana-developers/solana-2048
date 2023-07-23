@@ -11,24 +11,42 @@ public class Tile : MonoBehaviour
     public bool IsLocked;
     public MeshRenderer MeshRenderer;
     public TileConfig currentConfig;
-    
-    public Cell Cell;
+    public AudioClip MergeClip;
+    public AudioSource MergeAudioSource;
 
+    public Cell Cell;
+    private Vector3 originalScale;
+    
     private void Awake()
     {
         if (MeshRenderer == null)
         {
             MeshRenderer = GetComponentInChildren<MeshRenderer>();   
         }
+
+        var cachedTransform = transform;
+        originalScale = cachedTransform.localScale;
+        cachedTransform.localScale = Vector3.zero;
+        transform.DOScale(originalScale, 0.15f);
     }
     
-    public void Init(TileConfig config)
+    public void Init(TileConfig config, bool updateVisuals = true)
     {
         currentConfig = config;
-        NumberText.text = config.Number.ToString();
         gameObject.SetActive(config.Number > 0);
-        MeshRenderer.material = config.Material;
-        MeshRenderer.material.color = config.MaterialColor;
+
+        if (updateVisuals)
+        {
+            UpdateVisualState();
+        }
+    }
+
+    public void UpdateVisualState()
+    {
+        NumberText.text = currentConfig.Number.ToString();
+        gameObject.SetActive(currentConfig.Number > 0);
+        MeshRenderer.material = currentConfig.Material;
+        MeshRenderer.material.color = currentConfig.MaterialColor;
     }
 
     public void Spawn(Cell cell)
@@ -52,7 +70,7 @@ public class Tile : MonoBehaviour
         Cell = cell;
         Cell.Tile = this;
 
-        transform.DOMove(cell.transform.position, 0.5f).OnComplete(() =>
+        transform.DOMove(cell.transform.position, 0.45f).OnComplete(() =>
         {
 
         });
@@ -67,7 +85,8 @@ public class Tile : MonoBehaviour
         Cell = null;
         cell.Tile.IsLocked = true;
 
-        transform.DOMove(cell.transform.position, 0.5f).OnComplete(() =>
+        NumberText.transform.DOScale(Vector3.zero, 0.4f);
+        transform.DOMove(cell.transform.position, 0.45f).OnComplete(() =>
         {
             Destroy(gameObject);
             onMoveDone.Invoke();
@@ -75,11 +94,16 @@ public class Tile : MonoBehaviour
             if (cell.Tile.currentConfig.MergeFx != null)
             {
                 var instance = Instantiate(cell.Tile.currentConfig.MergeFx, cell.transform);
+                cell.Tile.transform.localScale = originalScale;
                 cell.Tile.transform.DOPunchScale(new Vector3(0.1f, 0.1f, 0.1f), 0.3f);
                 instance.AddComponent<DestroyDelayed>();
             }
         });    
     }
-
-
+    
+    public void PlayMergeSound()
+    {
+        MergeAudioSource.pitch = 1 + 0.07f * (currentConfig.Index);
+        MergeAudioSource.PlayOneShot(MergeClip);
+    }
 }

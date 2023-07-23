@@ -63,7 +63,7 @@ namespace SolPlay.Scripts.Ui
 
             if (ScoreText != null)
             {
-                await SetScoreFromPlayerDataAndLoadImage(nft);
+                SetScoreFromPlayerDataAndLoadImage(nft);
             }
             
             if (nft.metaplexData.nftImage == null)
@@ -80,7 +80,7 @@ namespace SolPlay.Scripts.Ui
             }
         }
 
-        private async Task SetScoreFromPlayerDataAndLoadImage(Nft nft)
+        private void SetScoreFromPlayerDataAndLoadImage(Nft nft)
         {
             if (ScoreText == null)
             {

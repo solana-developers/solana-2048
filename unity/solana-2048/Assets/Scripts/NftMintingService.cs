@@ -78,7 +78,7 @@ namespace SolPlay.Scripts.Services
 
             var candyMachineInstruction = CandyMachineProgram.MintNft(mintNftAccounts, creatorBump);
 
-            var blockHash = await Web3.Rpc.GetRecentBlockHashAsync();
+            var blockHash = await Web3.Rpc.GetLatestBlockHashAsync();
             var minimumRent =
                 await Web3.Rpc.GetMinimumBalanceForRentExemptionAsync(
                     TokenProgram.MintAccountDataSize);

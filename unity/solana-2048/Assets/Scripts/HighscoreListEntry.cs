@@ -24,46 +24,73 @@ namespace SolPlay.Scripts.Ui
         public Image SelectedBorder;
         public TextMeshProUGUI SolReward;
         public GameObject SolRewardRoot;
+        public Button Button;
+        public Nft Nft;
+        public HighscoreEntry CurrentHighscoreEntry { get; private set; }
 
-        public async void SetData(HighscoreEntry highscoreEntry, int count, double jackpotLamports)
+        private Action<HighscoreListEntry> OnClick;
+        
+        private void Awake()
         {
+            Button.onClick.AddListener(OnButtonClicked);
+        }
+
+        private void OnButtonClicked()
+        {
+            OnClick?.Invoke(this);
+        }
+
+        public async void SetData(HighscoreEntry highscoreEntry, int count, double jackpotLamports, bool weekly, Action<HighscoreListEntry> onClick)
+        {
+            CurrentHighscoreEntry = highscoreEntry;
+            OnClick = onClick;
             HighscoreText.text = highscoreEntry.Score.ToString();
             WalletAddress.text = highscoreEntry.Player;
 
-            if (count < 3)
+            if (weekly)
             {
-                TrophieImage.sprite = TrophieSprites[count];
+                if (count < 3)
+                {
+                    TrophieImage.sprite = TrophieSprites[count];
+                }
+                TrophieImage.gameObject.SetActive(count < 3);
+                SolRewardRoot.gameObject.SetActive(count < 3);
+                SolReward.text = (jackpotLamports / 3).ToString("F3");
+            }
+            else
+            {
+                TrophieImage.gameObject.SetActive(false);
+                SolRewardRoot.gameObject.SetActive(false);
             }
             
             SelectedBorder.gameObject.SetActive(highscoreEntry.Player == Web3.Account.PublicKey);
-            TrophieImage.gameObject.SetActive(count < 3);
-            SolRewardRoot.gameObject.SetActive(count < 3);
-            SolReward.text = (jackpotLamports / 3).ToString("F3");
+
             
-            Nft nft = null;
+            Nft = null;
             try
             {
                 var rpc = Web3.Wallet.ActiveRpcClient;
-                nft  = await Nft.TryGetNftData(highscoreEntry.Nft, rpc).AsUniTask();
+                Nft  = await Nft.TryGetNftData(highscoreEntry.Nft, rpc).AsUniTask();
             }
             catch (Exception e)
             {
                 Debug.LogError("Could not load nft" + e);
             }
 
-            if (nft == null)
+            if (Nft == null)
             {
-                nft = ServiceFactory.Resolve<NftService>().CreateDummyLocalNft(highscoreEntry.Nft);
+                Nft = ServiceFactory.Resolve<NftService>().CreateDummyLocalNft(highscoreEntry.Nft, highscoreEntry.Player);
             }
-            NftItemView.gameObject.SetActive(nft != null);
-            FallbackImage.gameObject.SetActive(nft == null);
+            NftItemView.gameObject.SetActive(Nft != null);
+            FallbackImage.gameObject.SetActive(Nft == null);
 
-            NftName.text = nft.metaplexData.data.metadata.name;
+            NftName.text = Nft.metaplexData.data.metadata.name;
 
-            if (nft != null)
+            if (Nft != null)
             {
-                NftItemView.SetData(nft, view => {});
+                NftItemView.SetData(Nft, view => {});
             }
         }
+
     }
 }
