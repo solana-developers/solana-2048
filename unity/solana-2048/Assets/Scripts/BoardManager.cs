@@ -5,7 +5,6 @@ using System.Text;
 using DefaultNamespace;
 using DG.Tweening;
 using Frictionless;
-using Solana.Unity.SDK;
 using Solana.Unity.Wallet;
 using SolanaTwentyfourtyeight.Accounts;
 using SolPlay.Scripts.Ui;
