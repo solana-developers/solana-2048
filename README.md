@@ -1,5 +1,7 @@
 This game was started from the games template lumberjack: https://github.com/solana-developers/solana-game-starter-kits/tree/main/lumberjack
+
 You can try out a deployed demo here: https://solplay.de/solana-2048/
+
 And download an apk here: https://solplay.de/solana-2048/solana2048.apk
 
 Notice that to play you will need to create an account and it will automatically fund a session wallet. The sol in there you will get back when the session expires. 
