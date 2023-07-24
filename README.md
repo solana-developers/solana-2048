@@ -2,7 +2,7 @@ This game was started from the games template lumbejack: https://github.com/sola
 You can try out a deployed demo here: https://solplay.de/solana-2048/
 And download an apk here: https://solplay.de/solana-2048/solana2048.apk
 
-Notice that to play you will need to create and account and it will automatically fund a session wallet. The sol in there you will get back when the session expires. 
+Notice that to play you will need to create an account and it will automatically fund a session wallet. The sol in there you will get back when the session expires. 
 
 # Disclaimer
 Neither gum session token nor the solana-2048 program are audited. Use at your own risk.
