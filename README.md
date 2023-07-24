@@ -1,6 +1,13 @@
 How to run this example:
 
-Many things are still called lumberjack because this project is based on the lumberjack example from the game starter kits.
+This game was started from the games template lumbejack: https://github.com/solana-developers/solana-game-starter-kits/tree/main/lumberjack
+You can try out a deployed demo here: https://solplay.de/solana-2048/
+And download an apk here: https://solplay.de/solana-2048/solana2048.apk
+
+# Disclaimer
+Neither gum session token nor the solana-2048 program are audited. Use at your own risk.
+This is an example game and not a finished product. It is not optimized for security.
+
 
 Anchor program
 1. Install the [Anchor CLI](https://project-serum.github.io/anchor/getting-started/installation.html)
@@ -14,16 +21,13 @@ Unity client
 1. Install Unity (https://unity.com)
 2. Run the Scene Solana-2048
 3. While in editor press the login editor button on the bottom left
+4. Please adjust your RPC node URL in the Solana2048 Screen object in the Solana2048 scene. (Helius, quicknode, triton and others all work for this. The performance differences are not significant according to my tests) 
 
 To generate a new version of the c# client use:
 generate c# client: 
 https://solanacookbook.com/gaming/porting-anchor-to-unity.html#generating-the-client
 dotnet tool install Solana.Unity.Anchor.Tool
 dotnet anchorgen -i target/idl/solana_twentyfourtyeight.json -o target/idl/ProgramCode.cs
-
-# Disclaimer
-Neither gum session token nor the solana-2048 program are audited. Use at your own risk.
-This is an example game and not a finished product. It is not optimized for security.
 
 # Solana-2048  
 
