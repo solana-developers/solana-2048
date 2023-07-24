@@ -34,11 +34,12 @@ The goal of the game is to create a tile with the number 2048 or above.
 ## Everything is on chain 
 In the Solana version of it every transaction is an on chain transaction and it is using an auto approve system called
 gum session keys (https://github.com/gumhq/gpl/tree/master/programs/gpl_session), so signing every transaction is not needed but instead certain checked instructions in the program can be auto approved via the session token.
-The speed of transaction approval is reached by using a websocket connecting with the commitment "processed" and rolling back the game state if the transaction is not confirmed within a certain time. It also supports the Whirligig when connecting to a Triton RPC node.
+The speed of transaction approval is reached by using a websocket connecting with the commitment "processed" and rolling back the game state if the transaction is not confirmed within a certain time. It also supports the whirligig sockets when connecting to a Triton RPC node.
 
 ## Game state is saved on any NFT 
 Furthermore the game state is bound to an NFT mint if the player selects an NFT. 
 So the game state can actually be send to another player by sending the NFT to him and every game state can be loaded by just knowing the mint of the NFT.
+From the rankings tab you can load any of the games of other players and check their current game state. 
 
 ## Weekly high score
 With every new game a tiny amount of lamports is send to the programs jackpot treasury. This is then payed out to the player with the highest score at the end of each week by a clockwork (https://www.clockwork.xyz/) thread automatically.
