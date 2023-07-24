@@ -30,16 +30,22 @@ namespace SolPlay.Scripts.Services
         
         public List<UiRegistration> UiRegistrations = new List<UiRegistration>();
         
-        private readonly Dictionary<ScreenType, BasePopup> openPopups = new Dictionary<ScreenType, BasePopup>();
-
+        private readonly Dictionary<ScreenType, BasePopup> instantiatedPopups = new Dictionary<ScreenType, BasePopup>();
+        public static int OpenPopups = 0;
+            
         public void Awake()
         {
             ServiceFactory.RegisterSingleton(this);
         }
 
+        public bool IsAnyPopupOpen()
+        {
+            return OpenPopups > 0;
+        }
+
         public void OpenPopup(ScreenType screenType, UiData uiData)
         {
-            if (openPopups.TryGetValue(screenType, out BasePopup basePopup))
+            if (instantiatedPopups.TryGetValue(screenType, out BasePopup basePopup))
             {
                 basePopup.Open(uiData);
                 return;
@@ -50,7 +56,7 @@ namespace SolPlay.Scripts.Services
                 if (uiRegistration.ScreenType == screenType)
                 {
                     BasePopup newPopup = Instantiate(uiRegistration.PopupPrefab);
-                    openPopups.Add(screenType, newPopup);
+                    instantiatedPopups.Add(screenType, newPopup);
                     newPopup.Open(uiData);
                     return;
                 }
@@ -61,7 +67,7 @@ namespace SolPlay.Scripts.Services
 
         public IEnumerator HandleNewSceneLoaded()
         {
-            openPopups.Clear();
+            instantiatedPopups.Clear();
             yield return null;
         }
     }

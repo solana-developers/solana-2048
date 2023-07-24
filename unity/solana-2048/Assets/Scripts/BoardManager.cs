@@ -7,6 +7,7 @@ using DG.Tweening;
 using Frictionless;
 using Solana.Unity.Wallet;
 using SolanaTwentyfourtyeight.Accounts;
+using SolPlay.Scripts.Services;
 using SolPlay.Scripts.Ui;
 //using UnityEditor;
 using UnityEngine;
@@ -206,8 +207,10 @@ public class BoardManager : MonoBehaviour
             return;
         }
         
-        if (Solana2048Service.Instance.CurrentPlayerData == null || Solana2048Service.Instance.CurrentPlayerData.GameOver || !Solana2048Service.Instance.IsInitialized())
+        if (Solana2048Service.Instance.CurrentPlayerData == null || Solana2048Service.Instance.CurrentPlayerData.GameOver || !Solana2048Service.Instance.IsInitialized() 
+            || ServiceFactory.Resolve<UiService>().IsAnyPopupOpen())
         {
+            TouchInputHandler.InputState = null;
             cachedInput = null;
             return;
         }
