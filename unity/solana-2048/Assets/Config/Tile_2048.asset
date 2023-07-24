@@ -17,6 +17,6 @@ MonoBehaviour:
   MergeFx: {fileID: 107252, guid: ce5715dcf97590b4cbec21f0ed7cf1ed, type: 3}
   Material: {fileID: 2100000, guid: 94a9ed7f2ecbf4f18bc893d657a4a579, type: 2}
   ShakeStrength: 0.05
-  MaterialColor: {r: 0.91764706, g: 0.43529412, b: 0.19607843, a: 1}
+  MaterialColor: {r: 0.75686276, g: 0.18039216, b: 0.07058824, a: 1}
   BackgroundMaterial: {fileID: 2100000, guid: f930d90599b504acfaf3401bdeaec537, type: 2}
   Index: 10

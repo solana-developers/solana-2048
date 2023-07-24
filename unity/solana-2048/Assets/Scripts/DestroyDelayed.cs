@@ -13,7 +13,7 @@ namespace DefaultNamespace
         
         private IEnumerator DestroyGoDelayed()
         {
-            yield return new WaitForSeconds(3);
+            yield return new WaitForSeconds(5);
             Destroy(gameObject);
         }
     }

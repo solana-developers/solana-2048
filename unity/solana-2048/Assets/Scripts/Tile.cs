@@ -101,9 +101,16 @@ public class Tile : MonoBehaviour
         });    
     }
     
-    public void PlayMergeSound()
+    public void PlayMergeSound(AudioClip mergeClip = null)
     {
-        MergeAudioSource.pitch = 1 + 0.07f * (currentConfig.Index);
-        MergeAudioSource.PlayOneShot(MergeClip);
+        MergeAudioSource.pitch = 1 + 0.06f * (currentConfig.Index);
+        if (mergeClip != null)
+        {
+            MergeAudioSource.PlayOneShot(mergeClip);  
+        }
+        else
+        {
+            MergeAudioSource.PlayOneShot(MergeClip);
+        }
     }
 }

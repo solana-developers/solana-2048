@@ -108,7 +108,7 @@ MonoBehaviour:
   IsLocked: 0
   MeshRenderer: {fileID: 3052703294240283639}
   currentConfig: {fileID: 0}
-  MergeClip: {fileID: 8300000, guid: 85ed3bb4d00be4f62aeb1d7142c17704, type: 3}
+  MergeClip: {fileID: 8300000, guid: ad865b7cbbe73469e9ee4d560bc0b5a9, type: 3}
   MergeAudioSource: {fileID: 1522874758096623291}
   Cell: {fileID: 0}
 --- !u!82 &1522874758096623291

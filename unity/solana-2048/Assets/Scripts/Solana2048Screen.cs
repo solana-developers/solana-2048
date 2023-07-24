@@ -85,7 +85,7 @@ public class Solana2048Screen : MonoBehaviour
 
     private void Update()
     {
-        LoadingSpinner.gameObject.SetActive(Solana2048Service.Instance.IsAnyTransactionInProgress);
+        LoadingSpinner.gameObject.SetActive(Solana2048Service.Instance.IsAnyTransactionInProgress || Solana2048Service.Instance.IsRequestTimeoutActive());
         // Exception handling does not work when canceling transactions so better have it always enabled.
         //InitGameDataButton.interactable = !Solana2048Service.Instance.IsAnyTransactionInProgress;
         InitGameDataButton.interactable = true;
@@ -151,7 +151,7 @@ public class Solana2048Screen : MonoBehaviour
         Web3.Instance.rpcCluster = RpcCluster.DevNet;
         Web3.Instance.customRpc = EditortRpc;
         Web3.Instance.webSocketsRpc = EditortRpc.Replace("https://", "wss://");
-
+        
         if (UseWhirligig)
         {
             Web3.Instance.webSocketsRpc += "/whirligig/";

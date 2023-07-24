@@ -8,7 +8,9 @@ using Frictionless;
 using Solana.Unity.Wallet;
 using SolanaTwentyfourtyeight.Accounts;
 using SolPlay.Scripts.Ui;
+//using UnityEditor;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class BoardManager : MonoBehaviour
 {
@@ -24,8 +26,11 @@ public class BoardManager : MonoBehaviour
     public TextBlimp3D BlimpPrefab;
     public AudioSource MoveAudioSource;
     public AudioSource MergeAudioSource;
+    public AudioSource SpawnAudioSource;
     public AudioClip MoveClip;
+    public AudioClip Move2Clip;
     public AudioClip MergeClip;
+    public AudioClip SpawnClip;
     
     public bool IsWaiting;
     public DateTime? SocketMessageTimeout = null;
@@ -33,10 +38,11 @@ public class BoardManager : MonoBehaviour
     public TouchInputHandler TouchInputHandler;
     public DirectionIndicator DirectionIndicator;
     public TextAsset Asset;
+    public int HighestMergedTileThisMove;
     
     private Vector2Int? cachedInput = null;
     private bool isInitialized;
-
+    
     private void Awake()
     {
         ServiceFactory.RegisterSingleton(this);
@@ -181,8 +187,17 @@ public class BoardManager : MonoBehaviour
 
     private async void Update()
     {
+        // This is just here bcause there is currently no way to figure out if a wallet transaction was rejected and 
+        // Then the tasks hang, so to make sure all accounts are initialized we wait a bit...
+        if (Solana2048Service.Instance.IsRequestTimeoutActive())
+        {
+            cachedInput = null;
+            TouchInputHandler.InputState = null;
+            return;
+        }
+        
         TouchInputHandler.OnUpdate();
-        if (SocketMessageTimeout != null && SocketMessageTimeout + TimeSpan.FromSeconds(5) < DateTime.Now)
+        if (SocketMessageTimeout != null && SocketMessageTimeout + TimeSpan.FromSeconds(5) < DateTime.UtcNow)
         {
             RefreshFromPlayerdata(Solana2048Service.Instance.CurrentPlayerData);
             cachedInput = null;
@@ -223,34 +238,56 @@ public class BoardManager : MonoBehaviour
             TouchInputHandler.InputState = null;
         }
        
+        var endValue = Quaternion.Euler(0,0, 0);
+        var currentRotation = transform.rotation;
         if (cachedInput == Vector2Int.right)
         {
+            endValue =Quaternion.Euler(0,0, -1);
+            transform.rotation = endValue;
             if (Move(Vector2Int.right, WIDTH - 2, -1, 0, 1))
             {
+                transform.rotation = currentRotation;
+                transform.DORotateQuaternion(endValue, 0.3f);
                 Solana2048Service.Instance.PushInDirection(true, 0);
                 DirectionIndicator.SetDirection(Vector2Int.right);
             }
         }
         if (cachedInput == Vector2Int.down)
         {
+            endValue =Quaternion.Euler(-1,0, 0);
+            transform.rotation = endValue;
             if (Move(Vector2Int.down, 0, 1, HEIGHT - 2, -1))
             {
+                transform.rotation = currentRotation;
+                transform.DORotateQuaternion(endValue, 0.3f);
                 Solana2048Service.Instance.PushInDirection(true, 1);
                 DirectionIndicator.SetDirection(Vector2Int.down);
             }
         }
         if (cachedInput == Vector2Int.left)
         {
+            endValue =Quaternion.Euler(0,0, 1);
+            transform.rotation = endValue;
+
             if (Move(Vector2Int.left, 1, 1, 0, 1))
             {
+                transform.rotation = currentRotation;
+                transform.DORotateQuaternion(endValue, 0.3f);
+
                 Solana2048Service.Instance.PushInDirection(true, 2);
                 DirectionIndicator.SetDirection(Vector2Int.left);
             }
         }
         if (cachedInput == Vector2Int.up)
         {
+            endValue =Quaternion.Euler(1,0, 0);
+            transform.rotation = endValue;
+
             if (Move(Vector2Int.up, 0, 1, 1, 1))
             {
+                transform.rotation = currentRotation;
+                transform.DORotateQuaternion(endValue, 0.3f);
+                
                 Solana2048Service.Instance.PushInDirection(true, 3);
                 DirectionIndicator.SetDirection(Vector2Int.up);
             }
@@ -258,7 +295,7 @@ public class BoardManager : MonoBehaviour
 
         cachedInput = null;
     }
-    
+
     public Cell GetCell(int x, int y)
     {
         if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
@@ -278,6 +315,7 @@ public class BoardManager : MonoBehaviour
 
     private bool Move(Vector2Int direction, int startX, int incrementX, int startY, int incrementY)
     {
+        HighestMergedTileThisMove = 0;
         foreach (var tile in tiles) {
             tile.IsLocked = false;
         }
@@ -301,11 +339,11 @@ public class BoardManager : MonoBehaviour
         {
             if (SoundToggle.IsSoundEnabled())
             {
-                MoveAudioSource.PlayOneShot(MoveClip);
+                MoveAudioSource.PlayOneShot(Random.Range(0, 2) == 1 ? MoveClip : Move2Clip);
             }
 
             IsWaiting = true;
-            SocketMessageTimeout = DateTime.Now;
+            SocketMessageTimeout = DateTime.UtcNow;
         }
 
         return moved;
@@ -359,9 +397,13 @@ public class BoardManager : MonoBehaviour
             {
                 if (SoundToggle.IsSoundEnabled())
                 {
-                    var newPitch = 1 + 0.05f * (index -1);
-                    MergeAudioSource.pitch = MergeAudioSource.pitch < newPitch ? newPitch : MergeAudioSource.pitch;
-                    MergeAudioSource.PlayOneShot(MergeClip);
+                    //var newPitch = 1 + 0.05f * (index -1);
+                    //MergeAudioSource.pitch = MergeAudioSource.pitch < newPitch ? newPitch : MergeAudioSource.pitch;
+                    //MergeAudioSource.PlayOneShot(MergeClip);
+                    if (HighestMergedTileThisMove == b.currentConfig.Index)
+                    {
+                        b.PlayMergeSound(MergeClip);   
+                    }
                 }
                 var blimp = Instantiate(BlimpPrefab);
                 blimp.SetData(b.currentConfig.Number.ToString());
@@ -379,6 +421,7 @@ public class BoardManager : MonoBehaviour
         int index = Mathf.Clamp(IndexOf(b.currentConfig) + 1, 0, tileConfigs.Length - 1);
         TileConfig newState = tileConfigs[index];
         b.Init(newState, false);
+        HighestMergedTileThisMove = HighestMergedTileThisMove < b.currentConfig.Index ? b.currentConfig.Index: HighestMergedTileThisMove;
 
         // TODO: Animate score
         //gameManager.IncreaseScore(newState.number);
@@ -422,11 +465,17 @@ public class BoardManager : MonoBehaviour
         {
             return;
         }
+        
         var targetCell = AllCells[i, j];
         if (targetCell.Tile != null)
         {
             Debug.LogError("Target cell already full: " + targetCell.Tile.currentConfig.Number);
             return;
+        }
+        
+        if (SoundToggle.IsSoundEnabled())
+        {
+            SpawnAudioSource.PlayOneShot(SpawnClip);
         }
         
         Tile tileInstance = Instantiate(TilePrefab, transform);
@@ -436,6 +485,7 @@ public class BoardManager : MonoBehaviour
         if (overrideColor != null)
         {
             newConfig.MaterialColor = overrideColor.Value;
+            //EditorUtility.SetDirty(newConfig);
         }
 
         tileInstance.Init(newConfig);
