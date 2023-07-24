@@ -1,13 +1,14 @@
-How to run this example:
-
 This game was started from the games template lumbejack: https://github.com/solana-developers/solana-game-starter-kits/tree/main/lumberjack
 You can try out a deployed demo here: https://solplay.de/solana-2048/
 And download an apk here: https://solplay.de/solana-2048/solana2048.apk
+
+Notice that to play you will need to create and account and it will automatically fund a session wallet. The sol in there you will get back when the session expires. 
 
 # Disclaimer
 Neither gum session token nor the solana-2048 program are audited. Use at your own risk.
 This is an example game and not a finished product. It is not optimized for security.
 
+How to run this example:
 
 Anchor program
 1. Install the [Anchor CLI](https://project-serum.github.io/anchor/getting-started/installation.html)
