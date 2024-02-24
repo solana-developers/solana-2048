@@ -7,7 +7,7 @@ solana-2048 = "2o48YSS8GdsvXk9qWXsoctcHdLkEfkmkTeaggXtaVJzX"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "mainnet"
+cluster = "devnet"
 wallet = "/Users/jonasmac2/.config/solana/id.json"
 
 [scripts]
