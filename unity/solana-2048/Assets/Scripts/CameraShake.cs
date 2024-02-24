@@ -41,13 +41,11 @@ namespace SolPlay.FlappyGame.Runtime.Scripts
             {
                 Camera.gameObject.transform.position = StartScaledPosition;
                 instance._originalPos = instance.gameObject.transform.localPosition;
-
             }
             else
             {
                 Camera.gameObject.transform.position = StartPosition;
                 instance._originalPos = instance.gameObject.transform.localPosition;
-
             }
             //Camera.orthographicSize = CameraSize / Screen.width * Screen.height;
             //var orthographicSize = ((CameraSize / 1000) * Screen.width);        

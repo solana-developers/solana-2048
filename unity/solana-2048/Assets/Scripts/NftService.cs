@@ -74,6 +74,10 @@ namespace SolPlay.Scripts.Services
             {
                 foreach (var newNft in nfts)
                 {
+                    if (newNft.metaplexData == null || newNft.metaplexData.data == null)
+                    {
+                        continue;
+                    }
                     if (GetSelectedNftPubKey() == newNft.metaplexData.data.mint)
                     {
                         //SelectedNft = newNft;

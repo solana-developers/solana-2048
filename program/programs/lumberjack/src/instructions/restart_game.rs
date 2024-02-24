@@ -5,7 +5,7 @@ pub use crate::errors::Solana2048Error;
 use crate::Highscore;
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
-use gpl_session::{SessionError, SessionToken, session_auth_or, Session};
+use session_keys::{SessionError, SessionToken, session_auth_or, Session};
 
 use super::Pricepool;
 use super::init_player::PlayerData;

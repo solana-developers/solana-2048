@@ -7,7 +7,7 @@ use anchor_lang::InstructionData;
 use instructions::*;
 pub mod instructions;
 
-declare_id!("BTN22dEcBJcDF1vi81x5t3pXtD49GFA4cn3vDDrEyT3r");
+declare_id!("2o48ieM95rmHqMWC5B3tTX4DL7cLm4m1Kuwjay3keQSv");
 
 #[error_code]
 pub enum GameErrorCode {
@@ -20,11 +20,11 @@ pub enum GameErrorCode {
 /// Seed for thread_authority PDA.
 pub const THREAD_AUTHORITY_SEED: &[u8] = b"authority";
 
-// Total fee to start a game will be 0.001 sol
+// Total fee to start a game will be 0.01 sol
 // The game dev wallet can be configured in the client.
 // So everyone running a client can earn some sol.
-pub const JACKPOT_ENTRY: u64 = (LAMPORTS_PER_SOL / 10000) * 6; // 0.0006 SOL
-pub const GAME_DEV_FEE: u64 = (LAMPORTS_PER_SOL / 10000) * 4; // 0.0004 SOL
+pub const JACKPOT_ENTRY: u64 = (LAMPORTS_PER_SOL / 1000) * 8; // 0.008 SOL
+pub const GAME_DEV_FEE: u64 = (LAMPORTS_PER_SOL / 1000) * 2; // 0.002 SOL
 
 #[program]
 pub mod solana_twentyfourtyeight {

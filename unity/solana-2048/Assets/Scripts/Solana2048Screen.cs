@@ -26,6 +26,7 @@ public class Solana2048Screen : MonoBehaviour
     public Button InitGameDataButton;
 
     public TextMeshProUGUI ScoreText;
+    public TextMeshProUGUI JackpotText;
 
     public GameObject LoadingSpinner;
 
@@ -41,13 +42,14 @@ public class Solana2048Screen : MonoBehaviour
     private uint targetScore;
     private uint currentScore;
     
-    void Start()
+    async void Start()
     {
         LoggedInRoot.SetActive(false);
         NotLoggedInRoot.SetActive(true);
         
         LoginButton.onClick.AddListener(OnEditorLoginClicked);
-        LoginButton.gameObject.SetActive(Application.isEditor);
+        //LoginButton.gameObject.SetActive(Application.isEditor);
+        LoginButton.gameObject.SetActive(true);
         LoginWalletAdapterDevnetButton.onClick.AddListener(OnLoginWalletAdapterButtonClicked);
         LoginWalletAdapterMainNetButton.onClick.AddListener(OnLoginWalletAdapterMainnetButtonClicked);
         RevokeSessionButton.onClick.AddListener(OnRevokeSessionButtonClicked);
@@ -62,6 +64,8 @@ public class Solana2048Screen : MonoBehaviour
         StartCoroutine(UpdateNextEnergy());
         
         Solana2048Service.OnInitialDataLoaded += UpdateContent;
+        Solana2048Service.OnPricePoolChanged += OnPricePoolChanged;
+
         Web3.OnLogin += OnLogin;
     }
 
@@ -70,12 +74,20 @@ public class Solana2048Screen : MonoBehaviour
         Application.ExternalEval("document.location.reload(true)");
     }
 
-    private void OnLogin(Account obj)
+    private async void OnLogin(Account obj)
     {
         if (Solana2048Service.Instance.CurrentPlayerData == null)
         {
            // ServiceFactory.Resolve<UiService>().OpenPopup(UiService.ScreenType.NftListPopup, new NftListPopupUiData(false, Web3.Wallet));
         }
+        
+        var res = await Web3.Wallet.GetBalance(Solana2048Service.Instance.PricePoolPDA);
+        JackpotText.text = res.ToString("F3");
+    }
+
+    private void OnPricePoolChanged(string newPricePool)
+    {
+        JackpotText.text = newPricePool;
     }
 
     private void OnTestClicked()
@@ -85,7 +97,7 @@ public class Solana2048Screen : MonoBehaviour
 
     private void Update()
     {
-        LoadingSpinner.gameObject.SetActive(Solana2048Service.Instance.IsAnyTransactionInProgress || Solana2048Service.Instance.IsRequestTimeoutActive());
+        LoadingSpinner.gameObject.SetActive(Solana2048Service.Instance.IsAnyTransactionInProgress);
         // Exception handling does not work when canceling transactions so better have it always enabled.
         //InitGameDataButton.interactable = !Solana2048Service.Instance.IsAnyTransactionInProgress;
         InitGameDataButton.interactable = true;
@@ -98,7 +110,6 @@ public class Solana2048Screen : MonoBehaviour
         {
             Debug.LogError("Login error: " + s);
         });
-        
     }
 
     private void OnNftsButtonClicked()

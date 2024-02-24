@@ -21,6 +21,7 @@ namespace SolPlay.Scripts.Services
             TransferNftPopup = 0,
             NftListPopup = 1,
             HighscorePopup = 2,
+            SessionPopup = 3,
         }
 
         public class UiData
@@ -47,6 +48,7 @@ namespace SolPlay.Scripts.Services
         {
             if (instantiatedPopups.TryGetValue(screenType, out BasePopup basePopup))
             {
+                UiService.OpenPopups++;
                 basePopup.Open(uiData);
                 return;
             }
@@ -57,6 +59,7 @@ namespace SolPlay.Scripts.Services
                 {
                     BasePopup newPopup = Instantiate(uiRegistration.PopupPrefab);
                     instantiatedPopups.Add(screenType, newPopup);
+                    UiService.OpenPopups++;
                     newPopup.Open(uiData);
                     return;
                 }

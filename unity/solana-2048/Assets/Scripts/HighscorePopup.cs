@@ -9,6 +9,7 @@ using Solana.Unity.SDK;
 using Solana.Unity.Wallet;
 using SolanaTwentyfourtyeight.Accounts;
 using SolanaTwentyfourtyeight.Types;
+using SolPlay.DeeplinksNftExample.Utils;
 using SolPlay.Scripts.Services;
 using TMPro;
 using UnityEngine;
@@ -33,6 +34,7 @@ namespace SolPlay.Scripts.Ui
         public TextMeshProUGUI CurrentHighscoreText;
 
         public Button BackgroundButton;
+        public Button AddOneSolButton;
         public GameObject ShowAnotherPlayerFieldRoot;
         public TextMeshProUGUI OtherPlayerWalletAddressText;
         public TextMeshProUGUI OtherPlayerNftNameText;
@@ -46,6 +48,7 @@ namespace SolPlay.Scripts.Ui
             base.Awake();
             WeeklyButton.onClick.AddListener(OnWeeklyButtonClicked);
             GlobalButton.onClick.AddListener(OnGlobalButtonClicked);
+            AddOneSolButton.onClick.AddListener(OnAddOneSolButtonClicked);
             GlobalButtonCanvasGroup.alpha = 0.5f;
             WeeklyButtonCanvasGroup.alpha = 1f;
             GlobalArrow.gameObject.SetActive(false);
@@ -60,6 +63,11 @@ namespace SolPlay.Scripts.Ui
             ShowAnotherPlayerFieldRoot.SetActive(false);
             Solana2048Service.Instance.SubscribeToPlayerDataUpdates();
             ServiceFactory.Resolve<BoardManager>().IsWaiting = false;
+        }
+
+        private void OnAddOneSolButtonClicked()
+        {
+            Web3.Wallet.Transfer(Solana2048Service.Instance.PricePoolPDA, SolanaUtils.SolToLamports / 10, Commitment.Confirmed);
         }
 
         private void OnGlobalButtonClicked()
@@ -79,12 +87,19 @@ namespace SolPlay.Scripts.Ui
             Solana2048Service.Instance.RequestHighscore();
             LoadingSpinner.gameObject.SetActive(true);
             Solana2048Service.OnHighscoreChanged += OnHighscoreChanged;
+            Solana2048Service.OnPricePoolChanged += OnPricePoolChanged;
             base.Open(uiData);
+        }
+
+        private void OnPricePoolChanged(string newPricePool)
+        {
+            CurrentHighscoreText.text = newPricePool;
         }
 
         public override void Close()
         {
             Solana2048Service.OnHighscoreChanged -= OnHighscoreChanged;
+            Solana2048Service.OnPricePoolChanged -= OnPricePoolChanged;
             base.Close();
         }
 

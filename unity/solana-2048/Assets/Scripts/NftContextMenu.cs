@@ -39,7 +39,7 @@ namespace SolPlay.Scripts.Ui
         private async void OnSelectClicked()
         {
             ServiceFactory.Resolve<NftService>().SelectNft(currentNft);
-            Debug.Log($"{currentNft.metaplexData.data.offchainData.name} selected");
+            Debug.Log($"{currentNft.metaplexData.data.metadata.name} selected");
             Close();
         }
 
@@ -58,7 +58,7 @@ namespace SolPlay.Scripts.Ui
             this.onNftSelected = onNftSelected;
             currentNft = nftItemView.CurrentSolPlayNft;
             Root.gameObject.SetActive(true);
-            NftNameText.text = nftItemView.CurrentSolPlayNft.metaplexData.data.offchainData.name;
+            NftNameText.text = nftItemView.CurrentSolPlayNft.metaplexData.data.metadata.name;
             transform.position = nftItemView.transform.position;
         }
     }

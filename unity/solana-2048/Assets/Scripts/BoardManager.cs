@@ -196,7 +196,7 @@ public class BoardManager : MonoBehaviour
             TouchInputHandler.InputState = null;
             return;
         }
-        
+
         TouchInputHandler.OnUpdate();
         if (SocketMessageTimeout != null && SocketMessageTimeout + TimeSpan.FromSeconds(5) < DateTime.UtcNow)
         {
@@ -240,7 +240,19 @@ public class BoardManager : MonoBehaviour
             cachedInput = TouchInputHandler.InputState;
             TouchInputHandler.InputState = null;
         }
-       
+           
+        if (!Solana2048Service.Instance.IsSessionValid() && cachedInput != null && UiService.OpenPopups == 0)
+        {
+            var res = await Solana2048Service.Instance.UpdateSessionValid();
+
+            if (UiService.OpenPopups == 0)
+            {
+                cachedInput = null;
+                ServiceFactory.Resolve<UiService>().OpenPopup(UiService.ScreenType.SessionPopup, new SessionPopupUiData());
+            }
+            return;
+        }
+        
         var endValue = Quaternion.Euler(0,0, 0);
         var currentRotation = transform.rotation;
         if (cachedInput == Vector2Int.right)

@@ -91,11 +91,6 @@ namespace SolPlay.Scripts.Services
             ServiceFactory.RegisterSingleton(this);
         }
 
-        private void OnApplicationFocus(bool focus)
-        {
-            Debug.Log("Has focus" + focus);
-        }
-
         public WebSocketState GetState()
         {
             if (websocket == null)

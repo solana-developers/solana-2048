@@ -22,7 +22,6 @@ namespace SolPlay.Scripts.Ui
                 CloseButton.onClick.AddListener(OnCloseButtonClicked);
             }
 
-            UiService.OpenPopups++;
             Root.gameObject.SetActive(true);
         }
 

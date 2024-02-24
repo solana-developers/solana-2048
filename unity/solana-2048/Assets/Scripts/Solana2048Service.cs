@@ -2,12 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Frictionless;
-using Solana.Unity.Gum.GplSession.Accounts;
 using SolanaTwentyfourtyeight;
 using SolanaTwentyfourtyeight.Accounts;
 using SolanaTwentyfourtyeight.Program;
@@ -19,19 +19,22 @@ using Solana.Unity.Rpc.Messages;
 using Solana.Unity.Rpc.Models;
 using Solana.Unity.Rpc.Types;
 using Solana.Unity.SDK;
+using Solana.Unity.SessionKeys.GplSession.Accounts;
 using Solana.Unity.Wallet;
 using SolPlay.DeeplinksNftExample.Utils;
 using SolPlay.Scripts.Services;
 using UnityEngine;
+using UnityEngine.Networking;
 
 public class Solana2048Service : MonoBehaviour
 {
-    public static PublicKey Solana_2048_ProgramIdPubKey = new PublicKey("BTN22dEcBJcDF1vi81x5t3pXtD49GFA4cn3vDDrEyT3r");
+    public static PublicKey Solana_2048_ProgramIdPubKey = new PublicKey("2o48ieM95rmHqMWC5B3tTX4DL7cLm4m1Kuwjay3keQSv");
     public static PublicKey ClientDevWallet = new PublicKey("CYg2vSJdujzEC1E7kHMzB9QhjiPLRdsAa4Js7MkuXfYq");
 
     public static Solana2048Service Instance { get; private set; }
     public static Action<PlayerData> OnPlayerDataChanged;
     public static Action<Highscore> OnHighscoreChanged;
+    public static Action<string> OnPricePoolChanged;
     public static Action OnInitialDataLoaded;
     public static Action OnGameReset;
     public bool IsAnyTransactionInProgress => transactionsInProgress > 0;
@@ -52,20 +55,38 @@ public class Solana2048Service : MonoBehaviour
     private int blockBump;
     private string cachedBlockHash;
     private long? sessionValidUntil;
-
+    private bool waitingForSession;
+    private string currentPricePool;
+    
     private List<TimeSpan> socketResponseTimes = new List<TimeSpan>();
     private DateTime requestStarted = DateTime.UtcNow;
-    private DateTime requestTimeout = DateTime.UtcNow;
-    private TimeSpan requestTimeoutSpan = TimeSpan.Zero;
 
     private long GetSessionWalletDuration()
     {
-        return DateTimeOffset.UtcNow.AddHours(23).ToUnixTimeSeconds();
+        return DateTimeOffset.UtcNow.AddDays(6).ToUnixTimeSeconds();
         //return DateTimeOffset.UtcNow.AddMinutes(1).ToUnixTimeSeconds();   
     }
 
     private void Awake()
     {
+        // Session key program isnt compatible so reflection it is 
+        /*Type type = typeof(GplSessionProgram);
+
+        // Get the FieldInfo for the private static readonly field
+        FieldInfo fieldInfo = type.GetField("ProgramIdKey", BindingFlags.Public | BindingFlags.Static);
+        if (fieldInfo != null)
+        {
+            // Modify the field value using reflection
+            fieldInfo.SetValue(null, new PublicKey("3ao63wcSRNa76bncC2M3KupNtXBFiDyNbgK52VG7dLaE"));
+
+            // Verify that the value has changed
+            Debug.Log("Prog" + GplSessionProgram.ProgramIdKey); // Output: NewValue
+        }
+        else
+        {
+            Debug.Log("Field not found.");
+        }*/
+        
         if (Instance != null && Instance != this) 
         { 
             Destroy(this); 
@@ -99,11 +120,15 @@ public class Solana2048Service : MonoBehaviour
 
     private async void OnLogin(Account account)
     {
+        Debug.Log("Logged in with:" + Web3.Instance.customRpc);
         if (Web3.Instance.customRpc.Contains("devnet"))
         {
            var solBalance = await Web3.Instance.WalletBase.GetBalance(Commitment.Confirmed); 
-           if (solBalance < 20000)
+           Debug.Log("Solbalance:" + solBalance);
+
+           if (solBalance < 0.2f)
            {
+               StartCoroutine(MagicRequest(Web3.Instance.WalletBase.Account.PublicKey));
                Debug.Log("Not enough sol. Requesting airdrop");
                var result = await Web3.Instance.WalletBase.RequestAirdrop(commitment: Commitment.Confirmed);
                if (!result.WasSuccessful)
@@ -111,6 +136,15 @@ public class Solana2048Service : MonoBehaviour
                    Debug.Log("Airdrop failed.");
                }
            }
+        }
+        
+        var solBalance_2 = await Web3.Instance.WalletBase.GetBalance(Commitment.Confirmed);
+
+        int counter = 5;
+        while (solBalance_2 < 0.2f)
+        {
+            solBalance_2 = await Web3.Instance.WalletBase.GetBalance(Commitment.Confirmed);
+            await UniTask.Delay(500);
         }
         
         Debug.Log(account.PublicKey + " logged in");
@@ -153,7 +187,7 @@ public class Solana2048Service : MonoBehaviour
         {
             Debug.Log("Logged in with: " + Web3.Wallet.ActiveRpcClient.NodeAddress);
         }
-        
+
         _isSessionInitialized = await IsSessionTokenInitialized();
         _isSessionIsValid = await UpdateSessionValid();
         OnInitialDataLoaded?.Invoke();
@@ -172,11 +206,31 @@ public class Solana2048Service : MonoBehaviour
         _isInitialized = true;
     }
 
+    IEnumerator MagicRequest(string address)
+    {
+        using (UnityWebRequest www = UnityWebRequest.Post("https://faucet.solana.com/api/request", "{ \"walletAddress\": \""+address+"\", \"amount\": 1, \"network\": \"devnet\" }", "application/json"))
+        {
+            www.SetRequestHeader("Content-Type", "application/json");
+            www.SetRequestHeader("Access-Control-Allow-Origin", "*");
+            
+            www.SetRequestHeader("Authorization", "Bearer ");
+            yield return www.SendWebRequest();
+
+            if (www.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError(www.error);
+            }
+            else
+            {
+                Debug.Log("Form upload complete!");
+            }
+        }
+    }
+    
     private async Task RefreshSessionWallet()
     {
         sessionWallet = await SessionWallet.GetSessionWallet(Solana_2048_ProgramIdPubKey, "ingame2",
-            RpcCluster.MainNet, Web3.Wallet.ActiveRpcClient.NodeAddress.ToString(),
-            Web3.Wallet.ActiveStreamingRpcClient.NodeAddress.ToString());
+            Web3.Wallet);
     }
 
     private void OnApplicationFocus(bool focus)
@@ -184,8 +238,6 @@ public class Solana2048Service : MonoBehaviour
         if (focus && Web3.Instance.WalletBase != null)
         {
             UpdateRecentBlockHash();
-            requestTimeout = DateTime.UtcNow + requestTimeoutSpan;
-            requestTimeoutSpan = TimeSpan.Zero;
             StartCoroutine(GetSessionDelayed());
         }
         Debug.Log("Has focus" + focus);
@@ -197,7 +249,7 @@ public class Solana2048Service : MonoBehaviour
         UpdateRecentBlockHash();
         yield return new WaitForSeconds(3);
         UpdateRecentBlockHash();
-        yield return new WaitForSeconds(4);
+        yield return new WaitForSeconds(6);
         UpdateRecentBlockHash();
     }
 
@@ -218,18 +270,35 @@ public class Solana2048Service : MonoBehaviour
     
     private async void UpdateRecentBlockHashAsync()
     {
-        var blockHash = await Web3.Rpc.GetLatestBlockHashAsync(Commitment.Confirmed);                
-
+        var blockHash = await Web3.Rpc.GetLatestBlockHashAsync(Commitment.Confirmed);
+        
         if (blockHash.Result != null && blockHash.Result.Value != null && blockHash.WasSuccessful)
         {
             cachedBlockHash = blockHash.Result.Value.Blockhash;
-            Debug.Log("Cached Blockhash: " + cachedBlockHash);
             CantLoadBlockhash = false;
         }
         else
-        {
-            Debug.Log("Could not get new block hash. " + blockHash.RawRpcResponse + " request: " + blockHash.RawRpcRequest);
-            CantLoadBlockhash = true;
+        { 
+            // Hack because when there is an exception during NFT loading the CrossHttpClient has a stale network request, which 
+            // we can here reset via reflection. Reported to the unity sdk team already.
+           // var type = typeof(CrossHttpClient);
+           // var field = type.GetField("_currentRequestTask", BindingFlags.NonPublic | BindingFlags.Static);
+           // field.SetValue(null, null);
+
+            blockHash = await Web3.Rpc.GetLatestBlockHashAsync(Commitment.Confirmed);
+        
+            Debug.Log("Get block: success: " +blockHash.WasSuccessful + " was parsed: "+blockHash.WasRequestSuccessfullyHandled + " " + blockHash.RawRpcResponse + " request: " + blockHash.RawRpcRequest + " " + blockHash.ServerErrorCode + "" + blockHash.Reason + " rpc: " +Web3.Rpc.NodeAddress);
+            
+            if (blockHash.Result != null && blockHash.Result.Value != null && blockHash.WasSuccessful)
+            {
+                cachedBlockHash = blockHash.Result.Value.Blockhash;
+                CantLoadBlockhash = false;
+            }
+            else
+            {
+                //Debug.Log("Could not get new block hash. " + blockHash.RawRpcResponse + " request: " + blockHash.RawRpcRequest + " " + blockHash.ServerErrorCode + "" + blockHash.Reason + " rpc: " +Web3.Rpc.NodeAddress);
+                CantLoadBlockhash = true;
+            }
         }
 
         if (sessionWallet != null)
@@ -237,7 +306,6 @@ public class Solana2048Service : MonoBehaviour
             _isSessionInitialized = await IsSessionTokenInitialized();
             _isSessionIsValid = await UpdateSessionValid();
         }
-        Debug.Log($"Session is initilaized: {_isSessionInitialized} and valid: {_isSessionIsValid}");
     }
     
     private void OnSocketConnectedMessage(SocketServerConnectedMessage obj)
@@ -258,8 +326,15 @@ public class Solana2048Service : MonoBehaviour
         Debug.Log("Current average socket response time: " + average);
     }
     
-    private void SubscribeToPlayerAccountViaSocket()
+    private async void SubscribeToPlayerAccountViaSocket()
     {
+        ServiceFactory.Resolve<SolPlayWebSocketService>().SubscribeToPubKeyData(Instance.PricePoolPDA,
+            result =>
+            {
+                currentPricePool = (result.result.value.lamports / (double) WalletBase.SolLamports ).ToString("F3");
+                OnPricePoolChanged(currentPricePool);
+            });
+
         ServiceFactory.Resolve<SolPlayWebSocketService>().SubscribeToPubKeyData(PlayerDataPDA, result =>
         {
             TimeSpan timeBetweenRequestAnResponse = DateTime.UtcNow - requestStarted;
@@ -285,6 +360,9 @@ public class Solana2048Service : MonoBehaviour
 
             Debug.Log(grid);
         });
+        
+        var res = await Web3.Wallet.GetBalance(Instance.PricePoolPDA);
+        currentPricePool = res.ToString("F3");
     }
 
     public bool IsInitialized()
@@ -369,13 +447,15 @@ public class Solana2048Service : MonoBehaviour
             tx.Add(createSessionIX);
             Debug.Log("Has no session -> partial sign");
             tx.PartialSign(new[] { Web3.Account, sessionWallet.Account });
-            AddTimeoutAfterFocusGain();
+            waitingForSession = true;
         }
 
         bool success = await SendAndConfirmTransaction(Web3.Wallet, tx, "initialize", () =>
         {
+            waitingForSession = false;
         }, s =>
         {
+            waitingForSession = false;
             onError?.Invoke(s);
         });
         _isSessionInitialized = await IsSessionTokenInitialized();
@@ -393,7 +473,7 @@ public class Solana2048Service : MonoBehaviour
     public async Task<bool> IsSessionTokenInitialized()
     {
         var sessionTokenData = await Web3.Rpc.GetAccountInfoAsync(sessionWallet.SessionTokenPDA, Commitment.Confirmed);
-        if (sessionTokenData.Result.Value != null)
+        if (sessionTokenData.Result != null && sessionTokenData.Result.Value != null)
         {
             return true;
         }
@@ -401,20 +481,26 @@ public class Solana2048Service : MonoBehaviour
         return false;
     }
 
-    private bool IsSessionValid()
+    public bool IsSessionValid()
     {
         return sessionValidUntil != null && sessionValidUntil > DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+    }
+
+    public bool IsRequestTimeoutActive()
+    {
+        return waitingForSession;
     }
     
     public async Task<bool> UpdateSessionValid()
     {
         ResponseValue<AccountInfo> sessionTokenData = (await Web3.Rpc.GetAccountInfoAsync(sessionWallet.SessionTokenPDA, Commitment.Confirmed)).Result;
-        Debug.Log("Session token: " + sessionWallet.SessionTokenPDA);
+
         if (sessionTokenData == null) return false;
         if (sessionTokenData.Value == null || sessionTokenData.Value.Data[0] == null)
         {
             return false;
         }
+        
         var sessionToken = SessionToken.Deserialize(Convert.FromBase64String(sessionTokenData.Value.Data[0]));
         
         Debug.Log("Session token valid until: " + (new DateTime(1970, 1, 1)).AddSeconds(sessionToken.ValidUntil) + " Now: " + DateTimeOffset.UtcNow);
@@ -422,10 +508,53 @@ public class Solana2048Service : MonoBehaviour
         return sessionToken.ValidUntil > DateTimeOffset.UtcNow.ToUnixTimeSeconds();
     }
     
+    public async Task<SessionToken> RequestSessionToken()
+    {
+        ResponseValue<AccountInfo> sessionTokenData = (await Web3.Rpc.GetAccountInfoAsync(sessionWallet.SessionTokenPDA, Commitment.Confirmed)).Result;
+
+        if (sessionTokenData == null) return null;
+        if (sessionTokenData.Value == null || sessionTokenData.Value.Data[0] == null)
+        {
+            return null;
+        }
+        
+        var sessionToken = SessionToken.Deserialize(Convert.FromBase64String(sessionTokenData.Value.Data[0]));
+
+        return sessionToken;
+    }
+
     public async Task<SessionWallet> RevokeSession()
     {
-        await sessionWallet.PrepareLogout();
+        await sessionWallet.CloseSession();
         sessionWallet.Logout();
+        return sessionWallet;
+    }
+    
+    public async Task<SessionWallet> CreateSession()
+    {
+        var sessionToken = await Instance.RequestSessionToken();
+        if (sessionToken != null)
+        {
+            await RevokeSession();
+        }
+        
+        var tx = new Transaction()
+        {
+            FeePayer = Web3.Account,
+            Instructions = new List<TransactionInstruction>(),
+            RecentBlockHash = await Web3.BlockHash(Commitment.Confirmed, false)
+        };
+        SessionWallet.Instance = null;
+        await RefreshSessionWallet();
+        var sessionIx = sessionWallet.CreateSessionIX(true, GetSessionWalletDuration());
+        tx.Add(sessionIx);
+        tx.PartialSign(new[] { Web3.Account, sessionWallet.Account });
+
+        var res = await Web3.Wallet.SignAndSendTransaction(tx, commitment: Commitment.Confirmed);
+
+        Debug.Log("Create session wallet: " + res.RawRpcResponse);
+        await Web3.Wallet.ActiveRpcClient.ConfirmTransaction(res.Result, Commitment.Confirmed);
+
         return sessionWallet;
     }
 
@@ -448,60 +577,25 @@ public class Solana2048Service : MonoBehaviour
 
         blockBump = (blockBump +1) % 250;
 
-        WalletBase walletToUse = null;
-
-        bool isCreatingNewSession = false;
         if (useSession)
         {
-            if (_isSessionInitialized && !IsSessionValid())
-            {
-                _isSessionInitialized = await IsSessionTokenInitialized();
-                _isSessionIsValid = await UpdateSessionValid();
-                SessionWallet.Instance = null;
-                await RefreshSessionWallet();
-                _isSessionInitialized = await IsSessionTokenInitialized();
-                _isSessionIsValid = await UpdateSessionValid();
-            }
-            if (!_isSessionInitialized)
-            {
-                var topUp = true;
-                isCreatingNewSession = true;
-                var sessionIx = sessionWallet.CreateSessionIX(topUp, GetSessionWalletDuration());
-                accounts.Signer = Web3.Account.PublicKey;
-                tx.Add(sessionIx);
-                var pushInDirectionInstruction = SolanaTwentyfourtyeightProgram.PushInDirection(accounts, direction, (byte) blockBump ,Solana_2048_ProgramIdPubKey);
-                tx.Add(pushInDirectionInstruction);
-                Debug.Log("Has no session -> partial sign");
-                tx.PartialSign(new[] { Web3.Account, sessionWallet.Account });
-                walletToUse = Web3.Wallet;
-                _isSessionInitialized = true;
-                _isSessionIsValid = true;
-                AddTimeoutAfterFocusGain();
-            }
-            else
-            {
-                tx.FeePayer = sessionWallet.Account.PublicKey;
-                accounts.SessionToken = sessionWallet.SessionTokenPDA;
-                accounts.Signer = sessionWallet.Account.PublicKey;
-                var pushInDirectionInstruction = SolanaTwentyfourtyeightProgram.PushInDirection(accounts, direction, (byte) blockBump ,Solana_2048_ProgramIdPubKey);
-                tx.Add(pushInDirectionInstruction);
-                Debug.Log("Has session -> sign and send session wallet");
-                walletToUse = sessionWallet;
-            }
-            
+            tx.FeePayer = sessionWallet.Account.PublicKey;
+            accounts.SessionToken = sessionWallet.SessionTokenPDA;
+            accounts.Signer = sessionWallet.Account.PublicKey;
+            var pushInDirectionInstruction = SolanaTwentyfourtyeightProgram.PushInDirection(accounts, direction, (byte) blockBump ,Solana_2048_ProgramIdPubKey);
+            tx.Add(pushInDirectionInstruction);
+            Debug.Log("Has session -> sign and send session wallet");
+            WalletBase walletToUse = sessionWallet;
+          
             requestStarted = DateTime.UtcNow;
-            
-            await SendAndConfirmTransaction(walletToUse, tx, "Push in direction: " + direction, () => {}, data =>
+
+            await SendAndConfirmTransaction(walletToUse, tx, "Push in direction: " + direction, () =>
+            {
+            }, data =>
             {
                 OnGameReset?.Invoke();
                 SubscribeToPlayerDataUpdates();
             });
-            
-            if (isCreatingNewSession)
-            {
-                _isSessionInitialized = await IsSessionTokenInitialized();
-                _isSessionIsValid = await UpdateSessionValid();
-            }
         }
     }
 
@@ -723,16 +817,6 @@ public class Solana2048Service : MonoBehaviour
         }
         transactionsInProgress--;
         Debug.Log("Player data pda: " + PlayerDataPDA);
-    }
-
-    private void AddTimeoutAfterFocusGain()
-    {
-        requestTimeoutSpan = new TimeSpan(0, 0, 4);
-    }
-
-    public bool IsRequestTimeoutActive()
-    {
-        return requestTimeout > DateTime.UtcNow;
     }
     
 }

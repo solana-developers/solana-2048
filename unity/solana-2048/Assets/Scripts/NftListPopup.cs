@@ -4,8 +4,10 @@ using Solana.Unity.Rpc.Types;
 using Solana.Unity.SDK;
 using Solana.Unity.Wallet;
 using SolPlay.Scripts.Services;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using WebSocketSharp;
 
 namespace SolPlay.Scripts.Ui
 {
@@ -21,6 +23,7 @@ namespace SolPlay.Scripts.Ui
         public GameObject YouOwnANftOfCollectionRoot;
         public GameObject LoadingSpinner;
         public GameObject MinitingBlocker;
+        public TMP_InputField NftNameInput;
 
         private bool loadedNfts;
         
@@ -69,15 +72,43 @@ namespace SolPlay.Scripts.Ui
             base.Open(uiData);
         }
 
+        
+        private static string[] firstParts = new string[]
+        {
+            "Black", "Red", "One-Eyed", "Long", "Mad", "Iron"
+        };
+
+        private static string[] middleParts = new string[]
+        {
+            "Beard", "Hand", "Hook", "Leg", "Tooth", "Sea"
+        };
+
+        private static string[] lastParts = new string[]
+        {
+            "Jack", "Roger", "Sparrow", "Flint", "Morgan", "Barbarossa"
+        };
+
+        public static string GeneratePirateName()
+        {
+            string firstPart = firstParts[Random.Range(0, firstParts.Length)];
+            string middlePart = middleParts[Random.Range(0, middleParts.Length)];
+            string lastPart = lastParts[Random.Range(0, lastParts.Length)];
+
+            return $"{firstPart} {middlePart} {lastPart}";
+        }
+        
         private async void OnMintInAppButtonClicked()
         {
             MinitingBlocker.gameObject.SetActive(true);
 
+            string nftNameINput = NftNameInput.text;
+            string nftName = nftNameINput.IsNullOrEmpty() || nftNameINput == "Nft Name" ? GeneratePirateName() : nftNameINput;
+            
             // Mint a pirate sship
             var signature = await ServiceFactory.Resolve<NftMintingService>()
                 .MintNftWithMetaData(
                     "https://shdw-drive.genesysgo.net/QZNGUVnJgkw6sGQddwZVZkhyUWSUXAjXF9HQAjiVZ55/DummyPirateShipMetaData.json",
-                    "Simple Pirate Ship", "Pirate", b =>
+                    nftName, "Pirate", b =>
                     {
                         if (MinitingBlocker != null)
                         {

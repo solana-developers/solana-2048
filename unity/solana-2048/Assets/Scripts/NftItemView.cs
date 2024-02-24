@@ -55,7 +55,7 @@ namespace SolPlay.Scripts.Ui
             if (nft.metaplexData.data.offchainData != null)
             {
                 Description.text = nft.metaplexData.data.offchainData.description;
-                Headline.text = nft.metaplexData.data.offchainData.name;
+                Headline.text = nft.metaplexData.data.metadata.name;
             }
             
             Button.onClick.AddListener(OnButtonClicked);

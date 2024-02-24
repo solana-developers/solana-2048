@@ -42,7 +42,7 @@ namespace SolPlay.Scripts.Ui
 
         private void OnDisable()
         {
-            Web3.OnBalanceChange -= OnSolBalanceChangedMessage;
+            //Web3.OnBalanceChange -= OnSolBalanceChangedMessage;
         }
         
         private void UpdateContent()
@@ -56,6 +56,10 @@ namespace SolPlay.Scripts.Ui
 
         private void OnSolBalanceChangedMessage(double newLamports)
         {
+            if (!gameObject.activeInHierarchy)
+            {
+                return;
+            }
             double balanceChange = newLamports - currentLamports;
 
             if (balanceChange != 0 && Math.Abs(currentLamports - newLamports) > 0.00000001)

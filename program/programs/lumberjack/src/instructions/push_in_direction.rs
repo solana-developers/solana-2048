@@ -2,7 +2,7 @@
 use crate::PlayerData;
 use anchor_lang::prelude::*;
 
-use gpl_session::{SessionError, SessionToken, session_auth_or, Session};
+use session_keys::{SessionError, SessionToken, session_auth_or, Session};
 pub use crate::errors::Solana2048Error;
 
 #[session_auth_or(
