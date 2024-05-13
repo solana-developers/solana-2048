@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,6 +22,7 @@ using Solana.Unity.SessionKeys.GplSession.Accounts;
 using Solana.Unity.Wallet;
 using SolPlay.DeeplinksNftExample.Utils;
 using SolPlay.Scripts.Services;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -50,7 +50,7 @@ public class Solana2048Service : MonoBehaviour
     private bool _isSessionInitialized;
     private bool _isSessionIsValid;
     public bool CantLoadBlockhash;
-    public float CurrentAverageSocketResponseTime;
+    public double CurrentAverageSocketResponseTime;
     public SolanaTwentyfourtyeightClient solana_2048_client;
     private int blockBump;
     private string cachedBlockHash;
@@ -97,6 +97,14 @@ public class Solana2048Service : MonoBehaviour
         }
 
         Web3.OnLogin += OnLogin;
+        Web3.OnWebSocketConnect += OnSocketConnect;
+    }
+
+    private async void OnSocketConnect()
+    {
+        Debug.Log("On socket connected");
+        //await SubscribeToPlayerDataUpdates();
+        SubscribeToPlayerAccountViaSocket();
     }
 
     private void Start()
@@ -116,6 +124,7 @@ public class Solana2048Service : MonoBehaviour
     private void OnDestroy()
     {
         Web3.OnLogin -= OnLogin;
+        //Web3.OnWebSocketConnect -= OnSocketConnect;
     }
 
     private async void OnLogin(Account account)
@@ -141,18 +150,19 @@ public class Solana2048Service : MonoBehaviour
         var solBalance_2 = await Web3.Instance.WalletBase.GetBalance(Commitment.Confirmed);
 
         int counter = 5;
-        while (solBalance_2 < 0.2f)
+        while (solBalance_2 < 0.2f && counter >0)
         {
+            counter--;
             solBalance_2 = await Web3.Instance.WalletBase.GetBalance(Commitment.Confirmed);
             await UniTask.Delay(500);
         }
-        
+
         Debug.Log(account.PublicKey + " logged in");
 
         MessageRouter.AddHandler<SocketServerConnectedMessage>(OnSocketConnectedMessage);
-        ServiceFactory.Resolve<SolPlayWebSocketService>().Connect(Web3.Wallet.ActiveStreamingRpcClient.NodeAddress.ToString());
-
-        solana_2048_client = new SolanaTwentyfourtyeightClient(Web3.Wallet.ActiveRpcClient, Web3.Wallet.ActiveStreamingRpcClient, Solana_2048_ProgramIdPubKey);
+        //ServiceFactory.Resolve<SolPlayWebSocketService>().Connect(Web3.Wallet.ActiveStreamingRpcClient.NodeAddress.ToString());
+        
+        solana_2048_client = new SolanaTwentyfourtyeightClient(Web3.Rpc, Web3.WsRpc, Solana_2048_ProgramIdPubKey);
 
         StartCoroutine(PollRecentBlockhash());
         
@@ -310,32 +320,76 @@ public class Solana2048Service : MonoBehaviour
     
     private void OnSocketConnectedMessage(SocketServerConnectedMessage obj)
     {
+        Debug.Log("Socket connected");
         SubscribeToPlayerAccountViaSocket();
     }
 
     private void PrintAverageResponseTime()
     {
-        float average = 0;
+        double average = 0;
         foreach (var timeSpan in socketResponseTimes)
         {
-            average += timeSpan.Milliseconds;
+            average += timeSpan.TotalMilliseconds;
         }
 
         average /= socketResponseTimes.Count;
         CurrentAverageSocketResponseTime = average;
         Debug.Log("Current average socket response time: " + average);
     }
-    
+
+    private bool socketSubscribed = false;
     private async void SubscribeToPlayerAccountViaSocket()
     {
-        ServiceFactory.Resolve<SolPlayWebSocketService>().SubscribeToPubKeyData(Instance.PricePoolPDA,
+        if (socketSubscribed || PlayerDataPDA == null)
+        {
+            return;
+        }
+
+        //socketSubscribed = true;
+        await solana_2048_client.SubscribePricepoolAsync(Instance.PricePoolPDA, async (state, value, arg3) =>
+        {
+            await UniTask.SwitchToMainThread();
+
+            currentPricePool = (value.Value.Lamports / (double) WalletBase.SolLamports ).ToString("F3");
+            OnPricePoolChanged(currentPricePool);
+        }, Commitment.Processed);
+
+        await solana_2048_client.SubscribePlayerDataAsync(PlayerDataPDA, async (state, value, arg3) =>
+        {
+            Debug.Log("Socket update game data before main thread");
+            await UniTask.SwitchToMainThread();
+            Debug.Log("Socket update game data ");
+            TimeSpan timeBetweenRequestAnResponse = DateTime.UtcNow - requestStarted;
+            socketResponseTimes.Insert(0, timeBetweenRequestAnResponse);
+            socketResponseTimes = socketResponseTimes.Take(10).ToList();
+            PrintAverageResponseTime();
+                
+            CurrentPlayerData = arg3;
+            ServiceFactory.Resolve<NftService>().UpdateScoreForSelectedNFt(CurrentPlayerData);
+            Debug.Log(
+                $"New game data arrived x: {CurrentPlayerData.NewTileX} y: {CurrentPlayerData.NewTileY} level: {CurrentPlayerData.NewTileLevel}");
+            OnPlayerDataChanged?.Invoke(arg3);
+            
+            string grid = "";
+            for (int i = 0; i < arg3.Board.Data.Length; i++)
+            {
+                for (int j = 0; j < arg3.Board.Data[i].Length; j++)
+                {
+                    grid += "-" + arg3.Board.Data[i][j];
+                }
+            }
+
+            Debug.Log(grid);
+        }, Commitment.Processed);
+        
+        /*ServiceFactory.Resolve<SolPlayWebSocketService>().SubscribeToPubKeyData(Instance.PricePoolPDA,
             result =>
             {
                 currentPricePool = (result.result.value.lamports / (double) WalletBase.SolLamports ).ToString("F3");
                 OnPricePoolChanged(currentPricePool);
-            });
+            });*/
 
-        ServiceFactory.Resolve<SolPlayWebSocketService>().SubscribeToPubKeyData(PlayerDataPDA, result =>
+       /* ServiceFactory.Resolve<SolPlayWebSocketService>().SubscribeToPubKeyData(PlayerDataPDA, result =>
         {
             TimeSpan timeBetweenRequestAnResponse = DateTime.UtcNow - requestStarted;
             socketResponseTimes.Insert(0, timeBetweenRequestAnResponse);
@@ -359,7 +413,7 @@ public class Solana2048Service : MonoBehaviour
             }
 
             Debug.Log(grid);
-        });
+        });*/
         
         var res = await Web3.Wallet.GetBalance(Instance.PricePoolPDA);
         currentPricePool = res.ToString("F3");
@@ -426,7 +480,7 @@ public class Solana2048Service : MonoBehaviour
             Instructions = new List<TransactionInstruction>(),
             RecentBlockHash = cachedBlockHash
         };
-
+        AddPriorityFee(tx);
         InitPlayerAccounts accounts = new InitPlayerAccounts();
         accounts.Player = PlayerDataPDA;
         accounts.Signer = Web3.Account;
@@ -438,7 +492,7 @@ public class Solana2048Service : MonoBehaviour
 
         var initTx = SolanaTwentyfourtyeightProgram.InitPlayer(accounts, Solana_2048_ProgramIdPubKey);
         tx.Add(initTx);
-
+        
         if (!(await IsSessionTokenInitialized()))
         {
             var topUp = true;
@@ -544,6 +598,7 @@ public class Solana2048Service : MonoBehaviour
             Instructions = new List<TransactionInstruction>(),
             RecentBlockHash = await Web3.BlockHash(Commitment.Confirmed, false)
         };
+        AddPriorityFee(tx);
         SessionWallet.Instance = null;
         await RefreshSessionWallet();
         var sessionIx = sessionWallet.CreateSessionIX(true, GetSessionWalletDuration());
@@ -567,6 +622,8 @@ public class Solana2048Service : MonoBehaviour
             RecentBlockHash = cachedBlockHash
         };
 
+        AddPriorityFee(tx);
+        
         var selectedNft = ServiceFactory.Resolve<NftService>().SelectedNft;
         
         PushInDirectionAccounts accounts = new PushInDirectionAccounts();
@@ -599,6 +656,11 @@ public class Solana2048Service : MonoBehaviour
         }
     }
 
+    private void AddPriorityFee(Transaction tx)
+    {
+        tx.Add(ComputeBudgetProgram.SetComputeUnitPrice(10000));
+    }
+    
     // WIP would be good to combine the logout and the create session TX. Like that the player would not see the high 
     // of session top up + session token account.
     /*public async Task PrepareLogout()
@@ -686,6 +748,8 @@ public class Solana2048Service : MonoBehaviour
             Instructions = new List<TransactionInstruction>(),
             RecentBlockHash = cachedBlockHash
         };
+        
+        AddPriorityFee(tx);
 
         var amount = SolanaUtils.SolToLamports / 100;
         Debug.Log($"Lamports to top up wallet: {amount}");
@@ -700,7 +764,7 @@ public class Solana2048Service : MonoBehaviour
     public static async UniTask<bool> ConfirmTransaction(
         IRpcClient rpc,
         string hash,
-        Commitment commitment = Commitment.Finalized)
+        Commitment commitment = Commitment.Confirmed)
     {
         TimeSpan delay = commitment == Commitment.Finalized ? TimeSpan.FromSeconds(60.0) : TimeSpan.FromSeconds(30.0);
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
@@ -753,6 +817,8 @@ public class Solana2048Service : MonoBehaviour
             Instructions = new List<TransactionInstruction>(),
             RecentBlockHash = cachedBlockHash
         };
+        
+        AddPriorityFee(tx);
         var selectedNft = ServiceFactory.Resolve<NftService>().SelectedNft;
 
         RestartAccounts accounts = new RestartAccounts();

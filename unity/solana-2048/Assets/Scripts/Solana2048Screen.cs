@@ -34,7 +34,8 @@ public class Solana2048Screen : MonoBehaviour
     public GameObject NotInitializedRoot;
     public GameObject InitializedRoot;
     public GameObject NotLoggedInRoot;
-    public bool UseWhirligig;
+    public bool UseWhirligigDevnet;
+    public bool UseWhirligigMainnet;
 
     public string DevnetRpc = "";
     public string MainnetRpc = "";
@@ -138,7 +139,7 @@ public class Solana2048Screen : MonoBehaviour
         Web3.Instance.rpcCluster = RpcCluster.DevNet;
         Web3.Instance.customRpc = DevnetRpc;
         Web3.Instance.webSocketsRpc = DevnetRpc.Replace("https://", "wss://");
-        if (UseWhirligig)
+        if (UseWhirligigDevnet)
         {
             Web3.Instance.webSocketsRpc += "/whirligig/";
         }
@@ -150,10 +151,12 @@ public class Solana2048Screen : MonoBehaviour
         Web3.Instance.rpcCluster = RpcCluster.MainNet;
         Web3.Instance.customRpc = MainnetRpc;
         Web3.Instance.webSocketsRpc = MainnetRpc.Replace("https://", "wss://");
-        if (UseWhirligig)
+        if (UseWhirligigMainnet)
         {
             Web3.Instance.webSocketsRpc += "/whirligig/";
         }
+        Debug.Log(Web3.Instance.webSocketsRpc);
+
         await Web3.Instance.LoginWalletAdapter();
     }
 
@@ -163,7 +166,7 @@ public class Solana2048Screen : MonoBehaviour
         Web3.Instance.customRpc = EditortRpc;
         Web3.Instance.webSocketsRpc = EditortRpc.Replace("https://", "wss://");
         
-        if (UseWhirligig)
+        if (UseWhirligigDevnet)
         {
             Web3.Instance.webSocketsRpc += "/whirligig/";
         }
@@ -196,6 +199,7 @@ public class Solana2048Screen : MonoBehaviour
             });
         if (currentScore != targetScore)
         {
+            ScoreText.transform.transform.localScale = Vector3.one;
             ScoreText.transform.DOPunchScale(new Vector3(0.1f, 0.1f, 0.1f), 0.3f);   
         }
     }

@@ -23,12 +23,13 @@ public class SocketStatusWidget : MonoBehaviour
 
     void Update()
     {
+        StatusText.text = $"Average: ({Solana2048Service.Instance.CurrentAverageSocketResponseTime.ToString("F0")}ms)";
+
         var socketService = ServiceFactory.Resolve<SolPlayWebSocketService>();
         if (socketService != null)
         {
-            StatusText.text = "Socket: " + socketService.GetState() + $"({Solana2048Service.Instance.CurrentAverageSocketResponseTime.ToString("F0")}ms)";
-
-            ReconnectButton.gameObject.SetActive(socketService.GetState() == WebSocketState.Closed);
+            //StatusText.text = "Socket: " + socketService.GetState() + $"({Solana2048Service.Instance.CurrentAverageSocketResponseTime.ToString("F0")}ms)";
+            //ReconnectButton.gameObject.SetActive(socketService.GetState() == WebSocketState.Closed);
         }
     }
 }

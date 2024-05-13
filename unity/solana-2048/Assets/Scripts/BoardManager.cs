@@ -81,8 +81,6 @@ public class BoardManager : MonoBehaviour
                 Encoding.UTF8.GetBytes("player7"), player.KeyBytes,nft.KeyBytes
             },
             Solana2048Service.Solana_2048_ProgramIdPubKey, out PublicKey PlayerDataPDA, out byte bump);
-        
-        
     }
     
     private void OnGameReset()
@@ -198,7 +196,7 @@ public class BoardManager : MonoBehaviour
         }
 
         TouchInputHandler.OnUpdate();
-        if (SocketMessageTimeout != null && SocketMessageTimeout + TimeSpan.FromSeconds(5) < DateTime.UtcNow)
+        if (SocketMessageTimeout != null && SocketMessageTimeout + TimeSpan.FromSeconds(30) < DateTime.UtcNow)
         {
             RefreshFromPlayerdata(Solana2048Service.Instance.CurrentPlayerData);
             cachedInput = null;

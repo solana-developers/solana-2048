@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using codebase.utility;
+using Cysharp.Threading.Tasks;
 using Solana.Unity.SDK;
 
 namespace SolPlay.Scripts.Ui
@@ -21,6 +22,7 @@ namespace SolPlay.Scripts.Ui
         private double lamportsChange;
         private Coroutine disableSolChangeCoroutine;
         private double currentLamports;
+        private bool subscribedToSolUpdates;
 
         private void Awake()
         {
@@ -28,6 +30,18 @@ namespace SolPlay.Scripts.Ui
             {
                 CopyAddressButton.onClick.AddListener(OnCopyClicked);
             }
+
+            
+            //Web3.OnBalanceChange += OnSolBalanceChangedMessage;
+
+            /*Web3.OnWebSocketConnect += () =>
+            {
+                if (!subscribedToSolUpdates)
+                {
+                    subscribedToSolUpdates = true; 
+                    Web3.OnBalanceChange += OnSolBalanceChangedMessage;
+                }
+            };*/
         }
 
         private void OnCopyClicked()
@@ -37,12 +51,13 @@ namespace SolPlay.Scripts.Ui
 
         private void OnEnable()
         {
+            UpdateContent();
             Web3.OnBalanceChange += OnSolBalanceChangedMessage;
         }
 
         private void OnDisable()
         {
-            //Web3.OnBalanceChange -= OnSolBalanceChangedMessage;
+            Web3.OnBalanceChange -= OnSolBalanceChangedMessage;
         }
         
         private void UpdateContent()
@@ -54,13 +69,15 @@ namespace SolPlay.Scripts.Ui
             }
         }
 
-        private void OnSolBalanceChangedMessage(double newLamports)
+        private async void OnSolBalanceChangedMessage(double newLamports)
         {
+            await UniTask.SwitchToMainThread();
+            double balanceChange = newLamports - currentLamports;
+            UpdateContent();
             if (!gameObject.activeInHierarchy)
             {
                 return;
             }
-            double balanceChange = newLamports - currentLamports;
 
             if (balanceChange != 0 && Math.Abs(currentLamports - newLamports) > 0.00000001)
             {
